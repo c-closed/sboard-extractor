@@ -456,6 +456,19 @@ namespace SboardExtractor
 
         // ========== Form Classes ==========
 
+        static void SetIcon(Form form)
+        {
+            try
+            {
+                string iconPath = Path.Combine(
+                    Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".",
+                    "icon.ico");
+                if (File.Exists(iconPath))
+                    form.Icon = new Icon(iconPath);
+            }
+            catch { }
+        }
+
         class LoginForm : Form
         {
             private TextBox txtId;
@@ -469,6 +482,7 @@ namespace SboardExtractor
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 MaximizeBox = false;
                 StartPosition = FormStartPosition.CenterScreen;
+                SetIcon(this);
 
                 var lblId = new Label { Text = "ID", Location = new Point(30, 30), Size = new Size(40, 25) };
                 txtId = new TextBox { Location = new Point(80, 30), Size = new Size(180, 25), Text = "220807" };
@@ -534,6 +548,7 @@ namespace SboardExtractor
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 ControlBox = false;
                 StartPosition = FormStartPosition.CenterScreen;
+                SetIcon(this);
 
                 lstLog = new ListBox
                 {
