@@ -248,7 +248,7 @@ namespace SboardExtractor
             {
                 sessionHwnd = FindWindowByTitle(SessionPrefix, false);
                 if (sessionHwnd == IntPtr.Zero) sessionHwnd = FindWindowByTitle("Sboard", false);
-                if (sessionHwnd == IntPtr.Zero) { Progress("No Sboard session found"); return; }
+                if (sessionHwnd == IntPtr.Zero) { Progress("세션 없음"); return; }
                 ExtractContractDetails(sessionHwnd);
                 return;
             }
@@ -280,13 +280,13 @@ namespace SboardExtractor
             if (discoverMode) { DiscoverControls(sessionHwnd); return; }
             if (extractMode) { ExtractContractDetails(sessionHwnd); return; }
 
-            Progress("STEP1: finding xlsx...");
+            Progress("엑셀 파일 찾는중...");
             if (string.IsNullOrEmpty(xlsxPath))
             {
                 string exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".";
-                Progress("  exeDir=" + exeDir);
+                Progress("  경로=" + exeDir);
                 var xlsxFiles = Directory.GetFiles(exeDir, "*.xlsx");
-                Progress("  found " + xlsxFiles.Length + " xlsx files");
+                Progress("  " + xlsxFiles.Length + "개 파일 발견");
                 Array.Sort(xlsxFiles, (a, b) => string.Compare(b, a, StringComparison.Ordinal));
                 foreach (string f in xlsxFiles)
                 {
@@ -294,22 +294,22 @@ namespace SboardExtractor
                     if (!fn.StartsWith("~$")) { xlsxPath = f; break; }
                 }
             }
-            Progress("  xlsxPath=" + (xlsxPath ?? "(null)"));
+            Progress("  대상=" + (xlsxPath ?? "(없음)"));
 
-            Progress("STEP2: checking inputs...");
+            Progress("입력 파일 확인중...");
             if (string.IsNullOrEmpty(xlsxPath) && !File.Exists(inpFile))
             { Progress("입력 파일 없음"); return; }
 
-            Progress("STEP3: deleting old CSV...");
+            Progress("기존 CSV 삭제중...");
             if (File.Exists(_outputPath)) File.Delete(_outputPath);
 
             var items = new List<SearchItem>();
-            Progress("STEP4: loading biz list...");
+            Progress("업무 목록 로딩중...");
             if (!string.IsNullOrEmpty(xlsxPath))
             {
-                Progress("  reading xlsx...");
+                Progress("  xlsx 읽는중...");
                 items = ReadXlsxBizList(xlsxPath);
-                Progress("  loaded " + items.Count + " items");
+                Progress("  " + items.Count + "개 로드완료");
             }
             else
             {
@@ -324,19 +324,17 @@ namespace SboardExtractor
                     if (int.TryParse(parts[0].Trim(), out di))
                         items.Add(new SearchItem { BizNum = parts[1].Trim(), DeptIndex = di });
                 }
-                Progress("  loaded " + items.Count + " items from INP");
+                Progress("  " + items.Count + "개 로드완료 (INP)");
             }
 
-            Progress("STEP5: entering main loop (" + items.Count + " items)...");
+            Progress("총 " + items.Count + "건 처리 시작...");
             for (int idx = 0; idx < items.Count; idx++)
             {
                 var item = items[idx];
                 string tag = string.Format("{0:D2}/{1:D2} ", idx + 1, items.Count);
-                Progress(tag + "[" + item.BizNum + "] 추출중...");
-
-                Progress("  DoSearch...");
                 DoSearch(sessionHwnd, item.DeptIndex, item.BizNum);
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
+                Progress(tag + "[" + item.BizNum + "] 추출중...");
 
                 Dictionary<string, string> fields = null;
                 try
@@ -666,7 +664,7 @@ namespace SboardExtractor
                     }
                 }
             }
-            catch (Exception ex) { Console.WriteLine("  Error reading xlsx: " + ex.Message); }
+            catch (Exception ex) { Console.WriteLine("  xlsx 읽기 오류: " + ex.Message); }
             return result;
         }
 
@@ -726,7 +724,7 @@ namespace SboardExtractor
                 try { workbook.Save(); } catch (Exception) { }
                 try { workbook.Close(false); } catch (Exception) { }
             }
-            catch (Exception ex) { Console.WriteLine("  WriteXlsxRow error: " + ex.Message); }
+            catch (Exception ex) { Console.WriteLine("  Excel 쓰기 오류: " + ex.Message); }
             finally
             {
                 try { if (sheets != null) Marshal.ReleaseComObject(sheets); } catch (Exception) { }
@@ -844,11 +842,11 @@ namespace SboardExtractor
 
         static void ExtractContractDetails(IntPtr sessionHwnd)
         {
-            Console.WriteLine("\n=== Extract Contract Details ===\n");
+            Console.WriteLine("\n=== 계약 상세 추출 ===\n");
             IntPtr mdiClient = FindChildByClass(sessionHwnd, "MDIClient");
-            if (mdiClient == IntPtr.Zero) { Console.WriteLine("No MDIClient"); return; }
+            if (mdiClient == IntPtr.Zero) { Console.WriteLine("MDIClient 없음"); return; }
             IntPtr sproj = FindChildByClass(mdiClient, "Tfrm_sproj");
-            if (sproj == IntPtr.Zero) { Console.WriteLine("No Tfrm_sproj"); return; }
+            if (sproj == IntPtr.Zero) { Console.WriteLine("Tfrm_sproj 없음"); return; }
 
             IntPtr outerPageCtrl = IntPtr.Zero;
             IntPtr dc = NativeMethods.GetTopWindow(sproj);
@@ -859,7 +857,7 @@ namespace SboardExtractor
                 if (sbCls.ToString() == "TPageControl") { outerPageCtrl = dc; break; }
                 dc = NativeMethods.GetWindow(dc, NativeMethods.GW_HWNDNEXT);
             }
-            if (outerPageCtrl == IntPtr.Zero) { Console.WriteLine("No outer page control"); return; }
+            if (outerPageCtrl == IntPtr.Zero) { Console.WriteLine("외부 페이지 없음"); return; }
 
             int tabIndex = 0;
             IntPtr contractTab = IntPtr.Zero;
@@ -882,12 +880,12 @@ namespace SboardExtractor
                 }
                 child = NativeMethods.GetWindow(child, NativeMethods.GW_HWNDNEXT);
             }
-            if (contractTab == IntPtr.Zero) { Console.WriteLine("No 계약상세 tab"); return; }
+            if (contractTab == IntPtr.Zero) { Console.WriteLine("계약상세 탭 없음"); return; }
 
             NativeMethods.SendMessageW(outerPageCtrl, 0x130B, (IntPtr)tabIndex, IntPtr.Zero);
             Thread.Sleep(500);
 
-            Console.WriteLine("Children of 계약상세 tab:\n");
+            Console.WriteLine("계약상세 탭 자식 목록:\n");
             IntPtr c = NativeMethods.GetTopWindow(contractTab);
             int ci = 0;
             while (c != IntPtr.Zero && ci < 50)
@@ -918,12 +916,12 @@ namespace SboardExtractor
                 ci++;
             }
             NativeMethods.SendMessageW(outerPageCtrl, 0x130B, IntPtr.Zero, IntPtr.Zero);
-            Console.WriteLine("\nDone.");
+            Console.WriteLine("\n완료.");
         }
 
         static void DiscoverControls(IntPtr sessionHwnd)
         {
-            Console.WriteLine("\n=== UI Discovery Mode ===\n");
+            Console.WriteLine("\n=== UI 탐색 모드 ===\n");
             IntPtr mdiClient = IntPtr.Zero;
             NativeMethods.EnumChildWindows(sessionHwnd, (child, _) =>
             {
@@ -932,8 +930,8 @@ namespace SboardExtractor
                 if (sb.ToString() == "MDIClient") { mdiClient = child; return false; }
                 return true;
             }, IntPtr.Zero);
-            if (mdiClient == IntPtr.Zero) { Console.WriteLine("MDIClient not found!"); return; }
-            Console.WriteLine("Found MDIClient. MDI children:\n");
+            if (mdiClient == IntPtr.Zero) { Console.WriteLine("MDIClient 없음!"); return; }
+            Console.WriteLine("MDIClient 발견. MDI 자식 목록:\n");
 
             var mdiChildren = new List<IntPtr>();
             NativeMethods.EnumChildWindows(mdiClient, (child, _) => { mdiChildren.Add(child); return true; }, IntPtr.Zero);
@@ -963,7 +961,7 @@ namespace SboardExtractor
                 Console.WriteLine();
             }
 
-            Console.WriteLine("\n--- Detail tab sheets ---\n");
+            Console.WriteLine("\n--- 상세 탭 시트 ---\n");
             foreach (var mdiChild in mdiChildren)
             {
                 var sb = new StringBuilder(256);
@@ -1005,7 +1003,7 @@ namespace SboardExtractor
                     innerChild = NativeMethods.GetWindow(innerChild, NativeMethods.GW_HWNDNEXT);
                 }
             }
-            Console.WriteLine("Done.");
+            Console.WriteLine("완료.");
         }
 
         static void PrintChildInfo(IntPtr hwnd, int index, int indent)
@@ -1073,23 +1071,23 @@ namespace SboardExtractor
 
         static void DiscoverLoginWindow()
         {
-            Console.WriteLine("=== Login Window Discovery ===");
+            Console.WriteLine("=== 로그인 창 탐색 ===");
             IntPtr loginHwnd = FindWindowByTitle(LoginWindowTitle, true);
             Console.WriteLine("FindWindowByTitle('Sboard'): " + loginHwnd);
             if (loginHwnd == IntPtr.Zero)
             {
-                Console.WriteLine("Not found. Launching Sboard...");
+                Console.WriteLine("없음. Sboard 실행중...");
                 string exePath = @"C:\Program Files (x86)\sprog\sboard.exe";
                 LaunchSboard(exePath);
                 loginHwnd = WaitForWindow(LoginWindowTitle, 15);
                 if (loginHwnd == IntPtr.Zero)
-                { Console.WriteLine("FAILED: no login window after 15s"); return; }
+                { Console.WriteLine("실패: 15초 내 로그인 창 없음"); return; }
             }
-            Console.WriteLine("Login window handle: " + loginHwnd);
-            Console.WriteLine("Children (recursive):\n");
+            Console.WriteLine("로그인 창 핸들: " + loginHwnd);
+            Console.WriteLine("자식 목록 (재귀):\n");
             _elements.Clear();
             WalkWindowTree(loginHwnd, 0, 20);
-            Console.WriteLine("Found " + _elements.Count + " elements:\n");
+            Console.WriteLine(_elements.Count + "개 요소 발견:\n");
             foreach (var e in _elements)
             {
                 string pad = new string(' ', e.Depth * 2);
@@ -1099,34 +1097,33 @@ namespace SboardExtractor
             }
             Console.WriteLine("\n");
 
-            // Now dump ALL top-level windows with "Sboard" in title
-            Console.WriteLine("=== All Sboard windows ===");
+            Console.WriteLine("=== 모든 Sboard 창 ===");
             var allSboard = FindAllWindowsByTitle("Sboard");
             foreach (var w in allSboard)
-                Console.WriteLine("  Handle=" + w.Item1 + " Title='" + w.Item2 + "'");
+                Console.WriteLine("  핸들=" + w.Item1 + " 제목='" + w.Item2 + "'");
 
-            Console.WriteLine("\nDone.");
+            Console.WriteLine("\n완료.");
         }
 
         static void DiscoverMenu()
         {
-            Console.WriteLine("=== Menu Discovery ===");
+            Console.WriteLine("=== 메뉴 탐색 ===");
             IntPtr hwnd = FindWindowByTitle(SessionPrefix, false);
             if (hwnd == IntPtr.Zero)
             {
-                Console.WriteLine("No Sboard session found.");
+                Console.WriteLine("Sboard 세션 없음.");
                 return;
             }
-            Console.WriteLine("Session window handle: " + hwnd);
+            Console.WriteLine("세션 창 핸들: " + hwnd);
             IntPtr hMenu = NativeMethods.GetMenu(hwnd);
             if (hMenu == IntPtr.Zero)
             {
-                Console.WriteLine("No menu found (GetMenu returned 0).");
+                Console.WriteLine("메뉴 없음 (GetMenu=0).");
                 return;
             }
-            Console.WriteLine("Menu handle: " + hMenu + "\n");
+            Console.WriteLine("메뉴 핸들: " + hMenu + "\n");
             PrintMenu(hMenu, 0);
-            Console.WriteLine("\nDone.");
+            Console.WriteLine("\n완료.");
         }
 
         static void PrintMenu(IntPtr hMenu, int depth)
@@ -1159,17 +1156,17 @@ namespace SboardExtractor
 
         static void TestMenuId(int id)
         {
-            Console.WriteLine("Testing menu ID=" + id);
+            Console.WriteLine("메뉴 ID 테스트 " + id);
             IntPtr hwnd = FindWindowByTitle(SessionPrefix, false);
             if (hwnd == IntPtr.Zero)
             {
                 hwnd = FindWindowByTitle("Sboard", false);
                 if (hwnd == IntPtr.Zero)
-                { Console.WriteLine("No Sboard window found."); return; }
+                { Console.WriteLine("Sboard 창 없음."); return; }
             }
-            Console.WriteLine("Sending WM_COMMAND with ID=" + id + " to " + hwnd);
+            Console.WriteLine("WM_COMMAND 전송 ID=" + id + " → " + hwnd);
             NativeMethods.PostMessageW(hwnd, NativeMethods.WM_COMMAND, (IntPtr)(uint)id, IntPtr.Zero);
-            Console.WriteLine("Sent. Check if the expected window opened.");
+            Console.WriteLine("전송 완료. 창이 열렸는지 확인하세요.");
         }
 
         static void TestAllMenuIds()
@@ -1179,22 +1176,22 @@ namespace SboardExtractor
             {
                 hwnd = FindWindowByTitle("Sboard", false);
                 if (hwnd == IntPtr.Zero)
-                { Console.WriteLine("No Sboard window found."); return; }
+                { Console.WriteLine("Sboard 창 없음."); return; }
             }
             int[] ids = new int[] { 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 };
-            Console.WriteLine("Testing " + ids.Length + " menu IDs on " + hwnd);
-            Console.WriteLine("Press Enter after each ID to test the next one.\n");
+            Console.WriteLine(ids.Length + "개 메뉴 ID 테스트 (" + hwnd + ")");
+            Console.WriteLine("Enter 누를 때마다 다음 ID 전송.\n");
             for (int i = 0; i < ids.Length; i++)
             {
-                Console.Write("ID=" + ids[i] + " (" + (i+1) + "/" + ids.Length + "). Press Enter to send... ");
+                Console.Write("ID=" + ids[i] + " (" + (i+1) + "/" + ids.Length + "). Enter 입력중... ");
                 Console.ReadLine();
                 NativeMethods.PostMessageW(hwnd, NativeMethods.WM_COMMAND, (IntPtr)(uint)ids[i], IntPtr.Zero);
-                Console.WriteLine("Sent. Did 용역현황 open? (y=found, Enter=next): ");
+                Console.Write("전송. 용역현황 열렸으면 y 입력 (아니면 Enter): ");
                 string answer = Console.ReadLine();
                 if (answer != null && answer.Trim().ToLower() == "y")
-                { Console.WriteLine("Found! 용역현황 ID=" + ids[i]); Console.ReadLine(); return; }
+                { Console.WriteLine("발견! 용역현황 ID=" + ids[i]); Console.ReadLine(); return; }
             }
-            Console.WriteLine("\nAll tested. None opened 용역현황?");
+            Console.WriteLine("\n전체 테스트 완료. 용역현황 없음?");
         }
 
         static void InputCredentials(IntPtr hwnd, string id, string pw)
@@ -1351,7 +1348,7 @@ namespace SboardExtractor
         {
             int before = _elements.Count;
             WalkWindowTree(hwnd, 0);
-            Console.WriteLine("  Win32: " + (_elements.Count - before) + " elements");
+            Console.WriteLine("  Win32: " + (_elements.Count - before) + "개 요소");
         }
 
         static void WalkWindowTree(IntPtr hwnd, int depth, int maxDepth)
