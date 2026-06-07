@@ -511,7 +511,7 @@ namespace SboardExtractor
 
                 btnLogin = new Button
                 {
-                    Text = "로 그 인", Location = new Point(70, 108), Size = new Size(220, 36),
+                    Text = "로 그 인", Location = new Point(30, 108), Size = new Size(260, 36),
                     FlatStyle = FlatStyle.Flat, FlatAppearance = { BorderSize = 0 },
                     BackColor = Color.FromArgb(52, 120, 246), ForeColor = Color.White,
                     Font = new Font("맑은 고딕", 10, FontStyle.Bold), Cursor = Cursors.Hand
