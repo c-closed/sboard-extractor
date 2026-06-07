@@ -478,20 +478,47 @@ namespace SboardExtractor
             public LoginForm()
             {
                 Text = "Sboard Data Extractor";
-                Size = new Size(300, 200);
-                FormBorderStyle = FormBorderStyle.FixedDialog;
+                Size = new Size(320, 210);
+                FormBorderStyle = FormBorderStyle.FixedSingle;
                 MaximizeBox = false;
                 StartPosition = FormStartPosition.CenterScreen;
+                BackColor = Color.White;
                 SetIcon(this);
 
-                var lblId = new Label { Text = "ID", Location = new Point(30, 30), Size = new Size(40, 25) };
-                txtId = new TextBox { Location = new Point(80, 30), Size = new Size(180, 25), Text = "220807" };
+                var lblId = new Label
+                {
+                    Text = "ID", Location = new Point(30, 28), Size = new Size(30, 22),
+                    Font = new Font("맑은 고딕", 9), ForeColor = Color.FromArgb(80, 80, 80), TextAlign = ContentAlignment.MiddleLeft
+                };
+                txtId = new TextBox
+                {
+                    Location = new Point(70, 26), Size = new Size(220, 25), Text = "220807",
+                    Font = new Font("맑은 고딕", 10), BorderStyle = BorderStyle.FixedSingle,
+                    BackColor = Color.FromArgb(245, 245, 245)
+                };
 
-                var lblPw = new Label { Text = "PW", Location = new Point(30, 65), Size = new Size(40, 25) };
-                txtPw = new TextBox { Location = new Point(80, 65), Size = new Size(180, 25), UseSystemPasswordChar = true, Text = "0906" };
+                var lblPw = new Label
+                {
+                    Text = "PW", Location = new Point(30, 66), Size = new Size(30, 22),
+                    Font = new Font("맑은 고딕", 9), ForeColor = Color.FromArgb(80, 80, 80), TextAlign = ContentAlignment.MiddleLeft
+                };
+                txtPw = new TextBox
+                {
+                    Location = new Point(70, 64), Size = new Size(220, 25), Text = "0906",
+                    Font = new Font("맑은 고딕", 10), UseSystemPasswordChar = true, BorderStyle = BorderStyle.FixedSingle,
+                    BackColor = Color.FromArgb(245, 245, 245)
+                };
 
-                btnLogin = new Button { Text = "로 그 인", Location = new Point(110, 110), Size = new Size(80, 30) };
+                btnLogin = new Button
+                {
+                    Text = "로 그 인", Location = new Point(70, 108), Size = new Size(220, 36),
+                    FlatStyle = FlatStyle.Flat, FlatAppearance = { BorderSize = 0 },
+                    BackColor = Color.FromArgb(52, 120, 246), ForeColor = Color.White,
+                    Font = new Font("맑은 고딕", 10, FontStyle.Bold), Cursor = Cursors.Hand
+                };
                 btnLogin.Click += BtnLogin_Click;
+                btnLogin.MouseEnter += (s, e) => btnLogin.BackColor = Color.FromArgb(42, 100, 220);
+                btnLogin.MouseLeave += (s, e) => btnLogin.BackColor = Color.FromArgb(52, 120, 246);
                 AcceptButton = btnLogin;
 
                 Controls.Add(lblId); Controls.Add(txtId);
@@ -545,26 +572,31 @@ namespace SboardExtractor
             {
                 Text = "데이터 추출 진행";
                 Size = new Size(620, 420);
-                FormBorderStyle = FormBorderStyle.FixedDialog;
+                FormBorderStyle = FormBorderStyle.FixedSingle;
                 ControlBox = false;
                 StartPosition = FormStartPosition.CenterScreen;
+                BackColor = Color.White;
                 SetIcon(this);
 
                 lstLog = new ListBox
                 {
-                    Location = new Point(10, 10),
-                    Size = new Size(585, 340),
+                    Location = new Point(12, 12),
+                    Size = new Size(580, 330),
                     Font = new Font("Consolas", 9),
                     HorizontalScrollbar = true,
                     SelectionMode = SelectionMode.None,
-                    IntegralHeight = false
+                    IntegralHeight = false,
+                    BackColor = Color.FromArgb(250, 250, 250),
+                    BorderStyle = BorderStyle.FixedSingle
                 };
 
                 lblItem = new Label
                 {
                     Text = "준비중...",
-                    Location = new Point(10, 360),
-                    Size = new Size(585, 20),
+                    Location = new Point(12, 355),
+                    Size = new Size(580, 22),
+                    Font = new Font("맑은 고딕", 9),
+                    ForeColor = Color.FromArgb(80, 80, 80),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
 
