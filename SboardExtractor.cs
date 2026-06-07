@@ -492,7 +492,7 @@ namespace SboardExtractor
                 };
                 txtId = new TextBox
                 {
-                    Location = new Point(70, 26), Size = new Size(220, 25), Text = "220807",
+                    Location = new Point(70, 26), Size = new Size(220, 25),
                     Font = new Font("맑은 고딕", 10), BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Color.FromArgb(245, 245, 245)
                 };
@@ -504,7 +504,7 @@ namespace SboardExtractor
                 };
                 txtPw = new TextBox
                 {
-                    Location = new Point(70, 64), Size = new Size(220, 25), Text = "0906",
+                    Location = new Point(70, 64), Size = new Size(220, 25),
                     Font = new Font("맑은 고딕", 10), UseSystemPasswordChar = true, BorderStyle = BorderStyle.FixedSingle,
                     BackColor = Color.FromArgb(245, 245, 245)
                 };
