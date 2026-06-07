@@ -1,0 +1,6 @@
+﻿*.exe
+*.zip
+sboard_data.csv
+tmp/
+__pycache__/
+
