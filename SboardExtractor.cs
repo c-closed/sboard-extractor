@@ -480,15 +480,7 @@ namespace SboardExtractor
                     + "@echo d | xcopy \"" + extractDir + "\" \"" + exeDir + "\" /e /y > nul\r\n"
                     + "@start \"\" \"" + exePath + "\"";
                 File.WriteAllText(updaterBat, batContent);
-
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "cmd.exe",
-                    Arguments = "/c \"" + updaterBat + "\"",
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                };
-                Process.Start(psi);
+                Process.Start("cmd.exe", "/c \"" + updaterBat + "\"");
             }
             catch { }
         }
