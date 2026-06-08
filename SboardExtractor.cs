@@ -8,6 +8,14 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
 
+[assembly: System.Reflection.AssemblyTitle("Sboard 추출기")]
+[assembly: System.Reflection.AssemblyDescription("Sboard 계약 데이터 자동 추출")]
+[assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
+[assembly: System.Reflection.AssemblyCompany("")]
+[assembly: System.Reflection.AssemblyCopyright("")]
+[assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.0.0.0")]
+
 namespace SboardExtractor
 {
     static class NativeMethods
@@ -1569,7 +1577,14 @@ namespace SboardExtractor
         static void KillSboard()
         {
             foreach (var proc in Process.GetProcessesByName("sboard"))
-            { try { proc.Kill(); } catch { } }
+            {
+                try
+                {
+                    if (!proc.CloseMainWindow())
+                        proc.Kill();
+                }
+                catch { }
+            }
         }
 
         static void ExtractViaWin32(IntPtr hwnd)
