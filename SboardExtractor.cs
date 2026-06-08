@@ -167,6 +167,15 @@ namespace SboardExtractor
                 if (args[i] == "--console" || args[i] == "-c" || args[i] == "--discover-login" || args[i] == "--discover-menu" || args[i] == "--test-menu-id" || args[i] == "--test-all-menu" || args[i] == "--extract-details" || args[i] == "-e")
                 { ConsoleMain(args); return; }
 
+            if (!IsDotNetInstalled())
+            {
+                MessageBox.Show(
+                    ".NET Framework 4.5 이상이 필요합니다.\n"
+                    + "https://dotnet.microsoft.com/download/dotnet-framework 에서 설치 후 다시 실행해주세요.",
+                    ".NET 필요", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             using (var updateForm = new UpdateForm())
@@ -844,6 +853,21 @@ namespace SboardExtractor
             }
             catch (Exception ex) { Console.WriteLine("  xlsx 읽기 오류: " + ex.Message); }
             return result;
+        }
+
+        static bool IsDotNetInstalled()
+        {
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
+                    @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"))
+                {
+                    if (key == null) return false;
+                    var val = key.GetValue("Release");
+                    return val != null && (int)val >= 378389;
+                }
+            }
+            catch { return false; }
         }
 
         static bool IsExcelInstalled()
