@@ -240,6 +240,12 @@ namespace SboardExtractor
                 Console.WriteLine("Run() unhandled: " + runEx.GetType().Name);
                 try { Console.WriteLine(runEx.ToString()); } catch { Console.WriteLine("(cannot print exception details)"); }
             }
+            if (!discoverLogin && !discoverMenu && testMenuId <= 0 && !testAll)
+            {
+                Console.WriteLine();
+                Console.Write("Enter 키를 누르면 종료됩니다...");
+                Console.ReadLine();
+            }
         }
 
         static void Run(string userId, string password, string exePath, string inpFile,
@@ -305,7 +311,11 @@ namespace SboardExtractor
             Progress("  대상=" + (xlsxPath ?? "(없음)"));
 
             if (!string.IsNullOrEmpty(xlsxPath) && !IsExcelInstalled())
-                Progress("  ※ Excel 미설치 - xlsx 쓰기 불가 (읽기만 가능)");
+            {
+                Progress("오류: Excel이 설치되어 있지 않습니다.");
+                Progress("Excel을 설치한 후 다시 실행해주세요.");
+                return;
+            }
 
             Progress("입력 파일 확인중...");
             if (string.IsNullOrEmpty(xlsxPath) && !File.Exists(inpFile))
@@ -660,6 +670,7 @@ namespace SboardExtractor
         {
             private ListBox lstLog;
             private Label lblItem;
+            private Button btnClose;
             private Thread workThread;
 
             public ProgressForm(string userId, string password)
@@ -675,7 +686,7 @@ namespace SboardExtractor
                 lstLog = new ListBox
                 {
                     Location = new Point(12, 12),
-                    Size = new Size(580, 330),
+                    Size = new Size(580, 310),
                     Font = new Font("Consolas", 9),
                     HorizontalScrollbar = true,
                     SelectionMode = SelectionMode.None,
@@ -687,15 +698,33 @@ namespace SboardExtractor
                 lblItem = new Label
                 {
                     Text = "준비중...",
-                    Location = new Point(12, 355),
+                    Location = new Point(12, 332),
                     Size = new Size(580, 22),
                     Font = new Font("맑은 고딕", 9),
                     ForeColor = Color.FromArgb(80, 80, 80),
                     TextAlign = ContentAlignment.MiddleLeft
                 };
 
+                btnClose = new Button
+                {
+                    Text = "종료 (Enter)",
+                    Location = new Point(240, 358),
+                    Size = new Size(120, 30),
+                    FlatStyle = FlatStyle.Flat,
+                    FlatAppearance = { BorderSize = 0 },
+                    BackColor = Color.FromArgb(52, 120, 246),
+                    ForeColor = Color.White,
+                    Font = new Font("맑은 고딕", 9),
+                    Cursor = Cursors.Hand,
+                    Visible = false
+                };
+                btnClose.Click += (s, e) => Close();
+                btnClose.MouseEnter += (s, e) => btnClose.BackColor = Color.FromArgb(42, 100, 220);
+                btnClose.MouseLeave += (s, e) => btnClose.BackColor = Color.FromArgb(52, 120, 246);
+
                 Controls.Add(lstLog);
                 Controls.Add(lblItem);
+                Controls.Add(btnClose);
 
                 Shown += (s, args) =>
                 {
@@ -710,6 +739,14 @@ namespace SboardExtractor
                 { try { Invoke((Action)(() => AddLog(msg))); } catch { } return; }
                 lstLog.Items.Add("[" + DateTime.Now.ToString("HH:mm:ss") + "] " + msg);
                 lstLog.TopIndex = lstLog.Items.Count - 1;
+            }
+
+            void Finish()
+            {
+                if (InvokeRequired)
+                { try { Invoke((Action)Finish); } catch { } return; }
+                btnClose.Visible = true;
+                btnClose.Select();
             }
 
             void DoWork(string uid, string pw)
@@ -732,7 +769,8 @@ namespace SboardExtractor
                 }
                 finally
                 {
-                    AddLog("작업 완료");
+                    AddLog("작업 완료 - Enter를 누르면 종료됩니다.");
+                    Finish();
                 }
             }
 
