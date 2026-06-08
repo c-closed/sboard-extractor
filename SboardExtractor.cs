@@ -168,6 +168,11 @@ namespace SboardExtractor
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            using (var updateForm = new UpdateForm())
+            {
+                updateForm.ShowDialog();
+                if (!updateForm.ShouldLaunch) return;
+            }
             Application.Run(new LoginForm());
         }
 
@@ -535,26 +540,99 @@ namespace SboardExtractor
             protected override void OnShown(EventArgs e)
             {
                 base.OnShown(e);
-                ThreadPool.QueueUserWorkItem(delegate
+            }
+        }
+
+        class UpdateForm : Form
+        {
+            private TextBox txtLog;
+            public bool ShouldLaunch { get; private set; }
+
+            public UpdateForm()
+            {
+                ShouldLaunch = true;
+                Text = "업데이트 확인";
+                Size = new Size(400, 220);
+                FormBorderStyle = FormBorderStyle.FixedSingle;
+                ControlBox = false;
+                ShowInTaskbar = false;
+                StartPosition = FormStartPosition.CenterScreen;
+                BackColor = Color.White;
+                SetIcon(this);
+
+                txtLog = new TextBox
                 {
-                    string latestVersion, downloadUrl;
-                    if (CheckForUpdate(out latestVersion, out downloadUrl))
+                    Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical,
+                    Location = new Point(12, 12), Size = new Size(360, 158),
+                    Font = new Font("Consolas", 9), BackColor = Color.White,
+                    BorderStyle = BorderStyle.FixedSingle
+                };
+                Controls.Add(txtLog);
+
+                Shown += (s, e) => ThreadPool.QueueUserWorkItem(delegate { Check(); });
+            }
+
+            void Log(string msg)
+            {
+                BeginInvoke((Action)(delegate
+                {
+                    txtLog.AppendText("[" + DateTime.Now.ToString("HH:mm:ss") + "] " + msg + "\r\n");
+                }));
+            }
+
+            void Check()
+            {
+                try
+                {
+                    Log("서버에 연결중");
+                    var client = new System.Net.WebClient();
+                    client.Encoding = Encoding.UTF8;
+                    string xml = client.DownloadString(UpdateXmlUrl);
+                    var doc = new System.Xml.XmlDocument();
+                    doc.LoadXml(xml);
+                    Log("서버에 연결되었습니다.");
+
+                    var versionNode = doc.SelectSingleNode("/item/version");
+                    var urlNode = doc.SelectSingleNode("/item/url");
+                    if (versionNode == null || urlNode == null)
                     {
-                        BeginInvoke((Action)(delegate
-                        {
-                            var result = MessageBox.Show(
-                                "새 버전 " + latestVersion + "이(가) 있습니다.\n\n지금 업데이트하시겠습니까?",
-                                "업데이트 확인",
-                                MessageBoxButtons.YesNo,
-                                MessageBoxIcon.Information);
-                            if (result == DialogResult.Yes)
-                            {
-                                SelfUpdate(downloadUrl);
-                                Application.Exit();
-                            }
-                        }));
+                        Log("업데이트 정보가 없습니다.");
+                        Thread.Sleep(1500);
+                        BeginInvoke((Action)Close);
+                        return;
                     }
-                });
+
+                    string latestVersion = versionNode.InnerText.Trim();
+                    string downloadUrl = urlNode.InnerText.Trim();
+                    Log("최신버전 : " + latestVersion);
+                    Log("현재버전 : " + AppVersion);
+
+                    var current = new Version(AppVersion);
+                    var latest = new Version(latestVersion);
+                    if (latest > current)
+                    {
+                        Log("새 버전 다운로드 중...");
+                        string zipPath = Path.Combine(Path.GetTempPath(), "SboardExtractor_Update.zip");
+                        client.DownloadFile(downloadUrl, zipPath);
+                        Log("다운로드 완료.");
+                        Thread.Sleep(500);
+                        ShouldLaunch = false;
+                        SelfUpdate(downloadUrl);
+                        BeginInvoke((Action)Close);
+                    }
+                    else
+                    {
+                        Log("최신버전입니다.");
+                        Thread.Sleep(1500);
+                        BeginInvoke((Action)Close);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log("오류: " + ex.Message);
+                    Thread.Sleep(2000);
+                    BeginInvoke((Action)Close);
+                }
             }
         }
 
