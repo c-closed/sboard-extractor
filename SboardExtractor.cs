@@ -178,7 +178,7 @@ namespace SboardExtractor
 
         static void ConsoleMain(string[] args)
         {
-            Console.WriteLine("=== Sboard Data Extractor v" + AppVersion + " ===");
+            Console.WriteLine("=== Sboard 추출기 v" + AppVersion + " ===");
             Console.WriteLine();
 
             bool discoverMode = false;
@@ -478,7 +478,7 @@ namespace SboardExtractor
 
             public LoginForm()
             {
-                Text = "Sboard Data Extractor";
+                Text = "Sboard 추출기";
                 Size = new Size(320, 210);
                 FormBorderStyle = FormBorderStyle.FixedSingle;
                 MaximizeBox = false;
