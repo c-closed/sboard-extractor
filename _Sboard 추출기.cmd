@@ -18,4 +18,4 @@ if errorlevel 1 (
         exit /b
     )
 )
-start "" "%~dp0SboardExtractor.exe"
+start "" "%~dp0Sboard 추출기.exe"
