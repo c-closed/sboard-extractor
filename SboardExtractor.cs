@@ -209,10 +209,10 @@ namespace SboardExtractor
 
             if (!NativeMethods.IsUserAnAdmin())
             {
-                Console.Error.WriteLine("Error: Need administrator privileges.");
-                Console.Error.WriteLine("Please right-click and run as Administrator.");
-                Environment.Exit(1);
-                return;
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string argLine = args.Length > 0 ? string.Join(" ", args) : "";
+                NativeMethods.ShellExecuteW(IntPtr.Zero, "runas", exePath, argLine, null, 1);
+                Environment.Exit(0);
             }
 
             string userId = "220807";
@@ -300,9 +300,6 @@ namespace SboardExtractor
             if (string.IsNullOrEmpty(xlsxPath) && !File.Exists(inpFile))
             { Progress("입력 파일 없음"); return; }
 
-            Progress("기존 CSV 삭제중...");
-            if (File.Exists(_outputPath)) File.Delete(_outputPath);
-
             var items = new List<SearchItem>();
             Progress("업무 목록 로딩중...");
             if (!string.IsNullOrEmpty(xlsxPath))
@@ -348,7 +345,6 @@ namespace SboardExtractor
                 }
                 if (fields != null && fields.Count > 0)
                 {
-                    SaveSearchResult(item.BizNum, item.DeptIndex, fields);
                     if (!string.IsNullOrEmpty(xlsxPath))
                     {
                         try
@@ -389,9 +385,9 @@ namespace SboardExtractor
         {
             if (!NativeMethods.IsUserAnAdmin())
             {
-                MessageBox.Show("관리자 권한이 필요합니다.\n우클릭 → 관리자 권한으로 실행해주세요.",
-                    "권한 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Environment.Exit(1);
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                NativeMethods.ShellExecuteW(IntPtr.Zero, "runas", exePath, "", null, 1);
+                Environment.Exit(0);
             }
         }
 
@@ -1598,30 +1594,6 @@ namespace SboardExtractor
             return "";
         }
 
-        static void SaveSearchResult(string bizNum, int deptIndex, Dictionary<string, string> fields)
-        {
-            bool needsHeader = !File.Exists(_outputPath) || new FileInfo(_outputPath).Length == 0;
-            using (var sw = new StreamWriter(_outputPath, true, Encoding.UTF8))
-            {
-                if (needsHeader)
-                    sw.WriteLine("사업번호,부서인덱스,사업명,공급가액,총수금액,잔액,총외주액,외주잔액");
-                string v = "";
-                fields.TryGetValue("사업명", out v);
-                string 사업명 = EscapeCsv(v);
-                fields.TryGetValue("공급가액", out v);
-                string 공급가액 = EscapeCsv(v);
-                fields.TryGetValue("총수금액", out v);
-                string 총수금액 = EscapeCsv(v);
-                fields.TryGetValue("잔액", out v);
-                string 잔액 = EscapeCsv(v);
-                fields.TryGetValue("총외주액", out v);
-                string 총외주액 = EscapeCsv(v);
-                fields.TryGetValue("외주잔액", out v);
-                string 외주잔액 = EscapeCsv(v);
-                sw.WriteLine(EscapeCsv(bizNum) + "," + deptIndex + ","
-                    + 사업명 + "," + 공급가액 + "," + 총수금액 + ","
-                    + 잔액 + "," + 총외주액 + "," + 외주잔액);
-            }
-        }
+
     }
 }
