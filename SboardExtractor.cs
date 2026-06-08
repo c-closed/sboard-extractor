@@ -148,6 +148,7 @@ namespace SboardExtractor
         private static string _outputPath = Path.Combine(
             Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".",
             "sboard_data.csv");
+        private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
         private const string AppVersion = "1.0.0.0";
@@ -220,13 +221,16 @@ namespace SboardExtractor
                 Environment.Exit(0);
             }
 
-            string userId = "220807";
-            string password = "0906";
-            string sboardExe = @"C:\Program Files (x86)\sprog\sboard.exe";
-
             string inpFile = Path.Combine(
                 Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".",
                 "1팀수행사업.inp");
+
+            if (!discoverMode && !extractMode && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SBOARD_USER_ID")))
+            { Console.Error.WriteLine("Error: GUI 모드로 실행하거나 SBOARD_USER_ID 환경변수를 설정하세요."); return; }
+
+            string userId = Environment.GetEnvironmentVariable("SBOARD_USER_ID") ?? "";
+            string password = Environment.GetEnvironmentVariable("SBOARD_PASSWORD") ?? "";
+            string sboardExe = FindSboardExe();
 
             try
             {
@@ -301,6 +305,9 @@ namespace SboardExtractor
             }
             Progress("  대상=" + (xlsxPath ?? "(없음)"));
 
+            if (!string.IsNullOrEmpty(xlsxPath) && !IsExcelInstalled())
+                Progress("  ※ Excel 미설치 - xlsx 쓰기 불가 (읽기만 가능)");
+
             Progress("입력 파일 확인중...");
             if (string.IsNullOrEmpty(xlsxPath) && !File.Exists(inpFile))
             { Progress("입력 파일 없음"); return; }
@@ -352,13 +359,20 @@ namespace SboardExtractor
                 {
                     if (!string.IsNullOrEmpty(xlsxPath))
                     {
-                        try
+                        if (!IsExcelInstalled())
                         {
-                            WriteXlsxRow(xlsxPath, item.BizNum, fields);
+                            Progress(tag + "Excel 미설치 - xlsx 저장 생략");
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            Progress(tag + "WriteXlsxRow 오류: " + ex.GetType().Name + " - " + ex.Message);
+                            try
+                            {
+                                WriteXlsxRow(xlsxPath, item.BizNum, fields);
+                            }
+                            catch (Exception ex)
+                            {
+                                Progress(tag + "WriteXlsxRow 오류: " + ex.GetType().Name + " - " + ex.Message);
+                            }
                         }
                     }
                     string v; string projName = fields.TryGetValue("사업명", out v) ? v : "";
@@ -592,6 +606,13 @@ namespace SboardExtractor
                     doc.LoadXml(xml);
                     Log("서버에 연결되었습니다.");
 
+                    string sboardPath = FindSboardExe();
+                    Log("Sboard 경로 : " + sboardPath);
+                    if (!File.Exists(sboardPath))
+                        Log(" ※ Sboard.exe를 찾을 수 없습니다.");
+
+                    Log(".NET 버전 : " + Environment.Version);
+
                     var versionNode = doc.SelectSingleNode("/item/version");
                     var urlNode = doc.SelectSingleNode("/item/url");
                     if (versionNode == null || urlNode == null)
@@ -697,12 +718,11 @@ namespace SboardExtractor
                 AddLog("작업 시작");
                 try
                 {
-                    string sboardExe = @"C:\Program Files (x86)\sprog\sboard.exe";
                     string inpFile = Path.Combine(
                         Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".",
                         "1팀수행사업.inp");
 
-                    Run(uid, pw, sboardExe, inpFile, false, false, null, msg =>
+                    Run(uid, pw, FindSboardExe(), inpFile, false, false, null, msg =>
                     {
                         try { Invoke((Action)(() => UpdateUI(msg))); } catch { }
                     });
@@ -787,6 +807,18 @@ namespace SboardExtractor
             }
             catch (Exception ex) { Console.WriteLine("  xlsx 읽기 오류: " + ex.Message); }
             return result;
+        }
+
+        static bool IsExcelInstalled()
+        {
+            if (_excelAvailable.HasValue) return _excelAvailable.Value;
+            try
+            {
+                Type excelType = Type.GetTypeFromProgID("Excel.Application");
+                _excelAvailable = (excelType != null);
+            }
+            catch { _excelAvailable = false; }
+            return _excelAvailable.Value;
         }
 
         static void WriteXlsxRow(string xlsxPath, string bizNum, Dictionary<string, string> fields)
@@ -1198,8 +1230,7 @@ namespace SboardExtractor
             if (loginHwnd == IntPtr.Zero)
             {
                 Console.WriteLine("없음. Sboard 실행중...");
-                string exePath = @"C:\Program Files (x86)\sprog\sboard.exe";
-                LaunchSboard(exePath);
+                LaunchSboard(FindSboardExe());
                 loginHwnd = WaitForWindow(LoginWindowTitle, 15);
                 if (loginHwnd == IntPtr.Zero)
                 { Console.WriteLine("실패: 15초 내 로그인 창 없음"); return; }
@@ -1434,6 +1465,21 @@ namespace SboardExtractor
                 return found == IntPtr.Zero;
             }, IntPtr.Zero);
             return found;
+        }
+
+        static string FindSboardExe()
+        {
+            string envPath = Environment.GetEnvironmentVariable("SBOARD_EXE_PATH");
+            if (!string.IsNullOrEmpty(envPath) && File.Exists(envPath)) return envPath;
+            string[] candidates = {
+                @"C:\Program Files (x86)\sprog\sboard.exe",
+                @"C:\Program Files\sprog\sboard.exe",
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sboard.exe"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Sboard.exe")
+            };
+            foreach (var f in candidates)
+                if (File.Exists(f)) return f;
+            return candidates[0];
         }
 
         static void LaunchSboard(string exePath)
