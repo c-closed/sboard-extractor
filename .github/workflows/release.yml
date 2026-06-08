@@ -23,7 +23,7 @@ jobs:
       - name: Package
         shell: powershell
         run: |
-          Compress-Archive -Path "Sboard 추출기.exe","Sboard 추출기.exe.config","_Sboard 추출기.cmd" -DestinationPath SboardExtractor_Updated.zip -Force
+          Compress-Archive -Path "Sboard 추출기.exe","_Sboard 추출기.cmd" -DestinationPath SboardExtractor_Updated.zip -Force
 
       - name: Release
         uses: softprops/action-gh-release@v2
