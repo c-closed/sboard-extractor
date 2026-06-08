@@ -14,16 +14,22 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build with csc
+      - name: Build main exe
         shell: cmd
         run: |
           set REFDIR=C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8
           "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe" /target:winexe /win32icon:icon.ico /nologo /lib:"%REFDIR%" /reference:mscorlib.dll /reference:System.dll /reference:System.Core.dll /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Xml.dll /reference:System.Data.dll /reference:Microsoft.CSharp.dll /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll "SboardExtractor.cs" /out:"Sboard 추출기.exe"
 
+      - name: Build updater
+        shell: cmd
+        run: |
+          set REFDIR=C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8
+          "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe" /nologo /lib:"%REFDIR%" /reference:mscorlib.dll /reference:System.dll /reference:System.Core.dll "Updater.cs" /out:Updater.exe
+
       - name: Package
         shell: powershell
         run: |
-          Compress-Archive -Path "Sboard 추출기.exe","_Sboard 추출기.cmd" -DestinationPath SboardExtractor_Updated.zip -Force
+          Compress-Archive -Path "Sboard 추출기.exe","Updater.exe","_Sboard 추출기.cmd","install.cmd","installer.iss" -DestinationPath SboardExtractor_Updated.zip -Force
 
       - name: Release
         uses: softprops/action-gh-release@v2

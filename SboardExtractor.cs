@@ -311,19 +311,12 @@ namespace SboardExtractor
             if (discoverMode) { DiscoverControls(sessionHwnd); return; }
             if (extractMode) { ExtractContractDetails(sessionHwnd); return; }
 
-            Progress("엑셀 파일 찾는중...");
             if (string.IsNullOrEmpty(xlsxPath))
             {
-                string exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".";
-                Progress("  경로=" + exeDir);
-                var xlsxFiles = Directory.GetFiles(exeDir, "*.xlsx");
-                Progress("  " + xlsxFiles.Length + "개 파일 발견");
-                Array.Sort(xlsxFiles, (a, b) => string.Compare(b, a, StringComparison.Ordinal));
-                foreach (string f in xlsxFiles)
-                {
-                    string fn = Path.GetFileName(f);
-                    if (!fn.StartsWith("~$")) { xlsxPath = f; break; }
-                }
+                xlsxPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    "팀장회의 취합.xlsx");
+                if (!File.Exists(xlsxPath)) xlsxPath = null;
             }
             Progress("  대상=" + (xlsxPath ?? "(없음)"));
 
@@ -474,13 +467,21 @@ namespace SboardExtractor
 
                 System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, extractDir);
 
-                string updaterBat = Path.Combine(Path.GetTempPath(), "SboardExtractor_Updater.bat");
-                string batContent = ""
-                    + "@ping 127.0.0.1 -n 6 > nul\r\n"
-                    + "@echo d | xcopy \"" + extractDir + "\" \"" + exeDir + "\" /e /y > nul\r\n"
-                    + "@start \"\" \"" + exePath + "\"";
-                File.WriteAllText(updaterBat, batContent);
-                Process.Start("cmd.exe", "/c \"" + updaterBat + "\"");
+                string updaterPath = Path.Combine(exeDir, "Updater.exe");
+                if (!File.Exists(updaterPath))
+                    updaterPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Updater.exe");
+                if (!File.Exists(updaterPath)) return;
+
+                string desktopXlsx = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    "팀장회의 취합.xlsx");
+                string xlsxArg = File.Exists(desktopXlsx) ? " \"" + desktopXlsx + "\"" : "";
+
+                Process.Start(updaterPath,
+                    Process.GetCurrentProcess().Id + " \""
+                    + extractDir + "\" \""
+                    + exePath + "\""
+                    + xlsxArg);
             }
             catch { }
         }
@@ -559,9 +560,20 @@ namespace SboardExtractor
 
             void BtnLogin_Click(object sender, EventArgs e)
             {
+                string desktopXlsx = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    "팀장회의 취합.xlsx");
+                while (!File.Exists(desktopXlsx))
+                {
+                    var result = MessageBox.Show(
+                        "바탕화면에 \"팀장회의 취합.xlsx\" 파일이 없습니다.\n\n"
+                        + "파일을 바탕화면으로 옮긴 후 확인을 눌러주세요.",
+                        "파일 없음", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                    if (result != DialogResult.OK) return;
+                }
                 btnLogin.Enabled = false;
                 btnLogin.Text = "접속중...";
-                var progress = new ProgressForm(txtId.Text, txtPw.Text);
+                var progress = new ProgressForm(txtId.Text, txtPw.Text, desktopXlsx);
                 progress.FormClosed += (s2, e2) => { Close(); };
                 progress.Show();
                 Hide();
@@ -679,9 +691,11 @@ namespace SboardExtractor
             private Label lblItem;
             private Button btnClose;
             private Thread workThread;
+            private string _desktopXlsx;
 
-            public ProgressForm(string userId, string password)
+            public ProgressForm(string userId, string password, string desktopXlsx)
             {
+                _desktopXlsx = desktopXlsx;
                 Text = "데이터 추출 진행";
                 Size = new Size(620, 420);
                 FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -765,7 +779,7 @@ namespace SboardExtractor
                         Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".",
                         "1팀수행사업.inp");
 
-                    Run(uid, pw, FindSboardExe(), inpFile, false, false, null, msg =>
+                    Run(uid, pw, FindSboardExe(), inpFile, false, false, _desktopXlsx, msg =>
                     {
                         try { Invoke((Action)(() => UpdateUI(msg))); } catch { }
                     });
