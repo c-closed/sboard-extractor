@@ -474,19 +474,17 @@ namespace SboardExtractor
 
                 System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, extractDir);
 
-                string updaterPs1 = Path.Combine(Path.GetTempPath(), "SboardExtractor_Updater.ps1");
-                string psContent = ""
-                    + "$id = (Get-Process -Id " + Process.GetCurrentProcess().Id + " -ErrorAction SilentlyContinue).Id`r`n"
-                    + "if ($id) { Wait-Process -Id $id -Timeout 30 -ErrorAction SilentlyContinue }`r`n"
-                    + "Start-Sleep -Seconds 1`r`n"
-                    + "Copy-Item -Path '" + extractDir.Replace("'", "''") + "\\*' -Destination '" + exeDir.Replace("'", "''") + "' -Recurse -Force`r`n"
-                    + "Start-Process -FilePath '" + exePath.Replace("'", "''") + "'";
-                File.WriteAllText(updaterPs1, psContent);
+                string updaterBat = Path.Combine(Path.GetTempPath(), "SboardExtractor_Updater.bat");
+                string batContent = ""
+                    + "@ping 127.0.0.1 -n 6 > nul\r\n"
+                    + "@echo d | xcopy \"" + extractDir + "\" \"" + exeDir + "\" /e /y > nul\r\n"
+                    + "@start \"\" \"" + exePath + "\"";
+                File.WriteAllText(updaterBat, batContent);
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "powershell.exe",
-                    Arguments = "-ExecutionPolicy Bypass -WindowStyle Hidden -File \"" + updaterPs1 + "\"",
+                    FileName = "cmd.exe",
+                    Arguments = "/c \"" + updaterBat + "\"",
                     CreateNoWindow = true,
                     UseShellExecute = false
                 };
