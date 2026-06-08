@@ -186,7 +186,6 @@ namespace SboardExtractor
             bool extractMode = false;
             bool discoverLogin = false;
             bool discoverMenu = false;
-            bool debugXlsx = false;
             string xlsxPath = null;
 
             for (int i = 0; i < args.Length; i++)
