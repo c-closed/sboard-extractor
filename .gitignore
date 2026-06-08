@@ -1,4 +1,5 @@
 ﻿*.exe
+!Updater.exe
 *.zip
 sboard_data.csv
 tmp/
