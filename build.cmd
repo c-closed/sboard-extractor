@@ -39,7 +39,7 @@ powershell -NoProfile -Command ^
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo ===== Building MSI =====
-wix build Product.wxs Files.wxs -o "Sboard 추출기.msi" -pdbtype none
+wix build Product.wxs Files.wxs -o "Sboard 추출기.msi" -pdbtype none --acceptEula
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo ===== Done =====

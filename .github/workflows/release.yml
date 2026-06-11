@@ -33,6 +33,7 @@ jobs:
         shell: powershell
         run: |
           dotnet tool install -g wix --version 7.0.0 2>&1 | Out-Null
+          wix eula --acceptEula 2>&1 | Out-Null
 
       - name: Generate Files.wxs
         shell: powershell
@@ -58,7 +59,7 @@ jobs:
       - name: Build MSI
         shell: cmd
         run: |
-          wix build Product.wxs Files.wxs -o "Sboard 추출기.msi" -pdbtype none
+          wix build Product.wxs Files.wxs -o "Sboard 추출기.msi" -pdbtype none --acceptEula
 
       - name: Package
         shell: powershell
