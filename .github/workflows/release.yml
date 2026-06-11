@@ -26,10 +26,20 @@ jobs:
           set REFDIR=C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8
           "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe" /nologo /lib:"%REFDIR%" /reference:mscorlib.dll /reference:System.dll /reference:System.Core.dll "Updater.cs" /out:Updater.exe
 
+      - name: Install WiX
+        shell: powershell
+        run: |
+          dotnet tool install -g wix --version 7.0.0 2>&1 | Out-Null
+
+      - name: Build MSI
+        shell: cmd
+        run: |
+          wix build Product.wxs -o "Sboard 추출기.msi"
+
       - name: Package
         shell: powershell
         run: |
-          Compress-Archive -Path "Sboard 추출기.exe","Updater.exe","_Sboard 추출기.cmd","install.cmd","installer.iss" -DestinationPath SboardExtractor_Updated.zip -Force
+          Compress-Archive -Path "Sboard 추출기.exe","Updater.exe","_Sboard 추출기.cmd","install.cmd","Sboard 추출기.msi" -DestinationPath SboardExtractor_Updated.zip -Force
 
       - name: Release
         uses: softprops/action-gh-release@v2
