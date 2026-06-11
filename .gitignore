@@ -1,6 +1,9 @@
 ﻿*.exe
 !Updater.exe
 *.zip
+*.msi
+*.wixpdb
+*.wixobj
 sboard_data.csv
 tmp/
 __pycache__/

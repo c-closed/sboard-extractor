@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="Sboard 추출기" Manufacturer="류호준" Version="1.0.0.0"
+  <Package Name="Sboard 추출기" Manufacturer="류호준" Version="1.1.0.0"
            UpgradeCode="A3F8B2E1-5C6D-4E7F-9A0B-1C2D3E4F5A6B"
            Language="1042" InstallerVersion="500" Compressed="yes"
            Scope="perMachine" Codepage="65001">
