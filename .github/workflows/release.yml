@@ -11,35 +11,59 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-      - name: Build main exe
+      - name: Build main exe (self-contained)
         shell: cmd
         run: |
-          set REFDIR=C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8
-          "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe" /target:winexe /win32icon:icon.ico /nologo /lib:"%REFDIR%" /reference:mscorlib.dll /reference:System.dll /reference:System.Core.dll /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Xml.dll /reference:System.Data.dll /reference:Microsoft.CSharp.dll /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll "SboardExtractor.cs" /out:"Sboard 추출기.exe"
+          dotnet publish SboardExtractor.csproj -c Release -r win-x64 --self-contained true -o publish
 
       - name: Build updater
         shell: cmd
         run: |
-          set REFDIR=C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8
-          "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\Roslyn\csc.exe" /nologo /lib:"%REFDIR%" /reference:mscorlib.dll /reference:System.dll /reference:System.Core.dll "Updater.cs" /out:Updater.exe
+          dotnet publish Updater.csproj -c Release -r win-x64 --self-contained true -o publish_tmp
+          copy /y "publish_tmp\Updater.exe" "publish\Updater.exe"
+          copy /y "publish_tmp\Updater.dll" "publish\Updater.dll"
+          rmdir /s /q publish_tmp
 
       - name: Install WiX
         shell: powershell
         run: |
           dotnet tool install -g wix --version 7.0.0 2>&1 | Out-Null
 
+      - name: Generate Files.wxs
+        shell: powershell
+        run: |
+          $p = (Resolve-Path 'publish').Path
+          $sb = New-Object System.Text.StringBuilder
+          $sb.AppendLine('<?xml version="1.0" encoding="utf-8"?>') | Out-Null
+          $sb.AppendLine('<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">') | Out-Null
+          $sb.AppendLine('  <Fragment>') | Out-Null
+          $sb.AppendLine('    <ComponentGroup Id="PublishFiles">') | Out-Null
+          Get-ChildItem -LiteralPath $p -File | ForEach-Object {
+            $fid = 'f_' + [System.Guid]::NewGuid().ToString('N')
+            $cid = 'c_' + [System.Guid]::NewGuid().ToString('N')
+            $sb.AppendLine('      <Component Id="' + $cid + '" Directory="INSTALLDIR" Guid="*">') | Out-Null
+            $sb.AppendLine('        <File Id="' + $fid + '" Source="' + $_.FullName + '" KeyPath="yes" />') | Out-Null
+            $sb.AppendLine('      </Component>') | Out-Null
+          }
+          $sb.AppendLine('    </ComponentGroup>') | Out-Null
+          $sb.AppendLine('  </Fragment>') | Out-Null
+          $sb.AppendLine('</Wix>') | Out-Null
+          Set-Content -Path 'Files.wxs' -Value $sb.ToString() -Encoding utf8
+
       - name: Build MSI
         shell: cmd
         run: |
-          wix build Product.wxs -o "Sboard 추출기.msi"
+          wix build Product.wxs Files.wxs -o "Sboard 추출기.msi" -pdbtype none
 
       - name: Package
         shell: powershell
         run: |
-          Compress-Archive -Path "Sboard 추출기.exe","Updater.exe","_Sboard 추출기.cmd","install.cmd","Sboard 추출기.msi" -DestinationPath SboardExtractor_Updated.zip -Force
+          Compress-Archive -Path "publish\*","_Sboard 추출기.cmd","install.cmd","Sboard 추출기.msi" -DestinationPath SboardExtractor_Updated.zip -Force
 
       - name: Release
         uses: softprops/action-gh-release@v2

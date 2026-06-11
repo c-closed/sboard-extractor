@@ -1,22 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
-  <Package Name="Sboard 추출기" Manufacturer="류호준" Version="1.1.0.0"
-           UpgradeCode="A3F8B2E1-5C6D-4E7F-9A0B-1C2D3E4F5A6B"
+  <Package Name="Sboard 추출기" Manufacturer="류호준" Version="1.1.1.0"
+           UpgradeCode="D4B3A60F-1A2C-4B8E-9F7D-6E5C4B3A2F1E"
            Language="1042" InstallerVersion="500" Compressed="yes"
-           Scope="perMachine" Codepage="65001">
+           Scope="perUser" Codepage="65001">
     <MajorUpgrade DowngradeErrorMessage="이미 더 최신 버전이 설치되어 있습니다." />
     <MediaTemplate EmbedCab="yes" />
-  </Package>
 
-  <Fragment>
-    <Feature Id="MainFeature" Title="Sboard 추출기" Level="1">
-      <ComponentGroupRef Id="ProductComponents" />
-      <ComponentRef Id="ShortcutDesktop" />
-      <ComponentRef Id="ShortcutStartMenu" />
-    </Feature>
-  </Fragment>
-
-  <Fragment>
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="MANUFACTURER" Name="류호준">
         <Directory Id="INSTALLDIR" Name="Sboard 추출기" />
@@ -26,53 +16,33 @@
     <StandardDirectory Id="ProgramMenuFolder">
       <Directory Id="ApplicationProgramsFolder" Name="Sboard 추출기" />
     </StandardDirectory>
-  </Fragment>
 
-  <Fragment>
-    <Icon Id="AppIcon" SourceFile="icon.ico" />
-    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
-    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
-    <UIRef Id="WixUI_Minimal" />
-  </Fragment>
-
-  <Fragment>
-    <ComponentGroup Id="ProductComponents" Directory="INSTALLDIR">
-      <Component Id="MainExe" Guid="*">
-        <File Id="MainExeFile" Source="Sboard 추출기.exe" KeyPath="yes" />
-      </Component>
-      <Component Id="UpdaterExe" Guid="*">
-        <File Id="UpdaterExeFile" Source="Updater.exe" KeyPath="yes" />
-      </Component>
-      <Component Id="LauncherCmd" Guid="*">
-        <File Id="LauncherCmdFile" Source="_Sboard 추출기.cmd" KeyPath="yes" />
-      </Component>
-      <Component Id="AppIconFile" Guid="*">
-        <File Id="AppIconFile" Source="icon.ico" KeyPath="yes" />
-      </Component>
-    </ComponentGroup>
+    <Feature Id="MainFeature" Title="Sboard 추출기" Level="1">
+      <ComponentGroupRef Id="PublishFiles" />
+      <ComponentRef Id="ShortcutDesktop" />
+      <ComponentRef Id="ShortcutStartMenu" />
+    </Feature>
 
     <ComponentGroup Id="Shortcuts">
       <Component Id="ShortcutDesktop" Directory="DesktopFolder" Guid="*">
         <Shortcut Id="DesktopShortcut" Name="Sboard 추출기"
-                  Target="[INSTALLDIR]Sboard 추출기.exe"
+                  Target="[INSTALLDIR]\Sboard 추출기.exe"
                   WorkingDirectory="INSTALLDIR"
-                  Icon="AppIcon" IconIndex="0"
-                  Description="Sboard 계약 데이터 자동 추출" />
+                  Description="Sboard 자동 데이터 추출 프로그램" />
         <RemoveFolder Id="DesktopFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\류호준\Sboard 추출기"
-                       Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+                       Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
 
       <Component Id="ShortcutStartMenu" Directory="ApplicationProgramsFolder" Guid="*">
         <Shortcut Id="StartMenuShortcut" Name="Sboard 추출기"
-                  Target="[INSTALLDIR]Sboard 추출기.exe"
+                  Target="[INSTALLDIR]\Sboard 추출기.exe"
                   WorkingDirectory="INSTALLDIR"
-                  Icon="AppIcon" IconIndex="0"
-                  Description="Sboard 계약 데이터 자동 추출" />
+                  Description="Sboard 자동 데이터 추출 프로그램" />
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU" Key="Software\류호준\Sboard 추출기"
-                       Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+                       Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>
     </ComponentGroup>
-  </Fragment>
+  </Package>
 </Wix>

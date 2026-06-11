@@ -4,7 +4,12 @@
 *.msi
 *.wixpdb
 *.wixobj
+cab1.cab
+Files.wxs
 sboard_data.csv
+_i/
+bin/
+obj/
 tmp/
 __pycache__/
 
