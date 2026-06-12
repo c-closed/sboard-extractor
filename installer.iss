@@ -1,7 +1,7 @@
 [Setup]
 AppId={{B4F5C6D7-E8F9-4A3B-8C2D-1E5F6A7B8C9D}
 AppName=Sboard 추출기
-AppVersion=1.3.0.0
+AppVersion=1.4.0.0
 DefaultDirName={autopf}\Sboard 추출기
 DefaultGroupName=Sboard 추출기
 UninstallDisplayIcon={app}\Sboard 추출기.exe
