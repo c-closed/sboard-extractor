@@ -36,11 +36,10 @@ jobs:
           rmdir /s /q publish_tmp
 
       - name: Install Inno Setup
-        shell: powershell
+        shell: cmd
         run: |
-          winget install --id JRSoftware.InnoSetup -e --accept-package-agreements 2>&1
-          $isccDir = Resolve-Path "$env:LOCALAPPDATA\Programs\Inno Setup*" | Select-Object -ExpandProperty Path
-          echo "ISCC_DIR=$isccDir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          choco install innosetup --no-progress -y
+          echo "ISCC_DIR=C:\Program Files (x86)\Inno Setup 6" >> %GITHUB_ENV%
 
       - name: Build Setup.exe
         shell: cmd
@@ -52,10 +51,6 @@ jobs:
         run: |
           @'
           $items = @(Get-ChildItem -Path "publish" -File -Recurse)
-          Get-ChildItem -Path "." -Filter "_Sboard*.cmd" -File | ForEach-Object { $items += $_ }
-          Get-ChildItem -Path "." -Filter "install.cmd" -File | ForEach-Object { $items += $_ }
-          Get-ChildItem -Path "." -Filter "Sboard*.msi" -File | ForEach-Object { $items += $_ }
-          Get-ChildItem -Path "." -Filter "Sboard*_Setup.exe" -File | ForEach-Object { $items += $_ }
           Compress-Archive -LiteralPath $items.FullName -DestinationPath SboardExtractor_Updated.zip -Force
           '@ | Out-File -FilePath package.ps1 -Encoding utf8
 
