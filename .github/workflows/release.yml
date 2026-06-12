@@ -62,14 +62,20 @@ jobs:
         run: |
           wix build Product.wxs Files.wxs -o "Sboard 추출기.msi" -pdbtype none --acceptEula yes
 
-      - name: Package
-        shell: powershell
+      - name: Write package script
+        shell: pwsh
         run: |
-          $items = @(Get-ChildItem -Path "publish" -File)
-          $items += Get-Item -LiteralPath "_Sboard 추출기.cmd" -ErrorAction SilentlyContinue
-          $items += Get-Item -LiteralPath "install.cmd" -ErrorAction SilentlyContinue
-          $items += Get-Item -LiteralPath "Sboard 추출기.msi" -ErrorAction SilentlyContinue
+          @'
+          $items = @(Get-ChildItem -Path "publish" -File -Recurse)
+          Get-ChildItem -Path "." -Filter "_Sboard*.cmd" -File | ForEach-Object { $items += $_ }
+          Get-ChildItem -Path "." -Filter "install.cmd" -File | ForEach-Object { $items += $_ }
+          Get-ChildItem -Path "." -Filter "Sboard*.msi" -File | ForEach-Object { $items += $_ }
           Compress-Archive -LiteralPath $items.FullName -DestinationPath SboardExtractor_Updated.zip -Force
+          '@ | Out-File -FilePath package.ps1 -Encoding utf8
+
+      - name: Package
+        shell: pwsh
+        run: ./package.ps1
 
       - name: Release
         uses: softprops/action-gh-release@v2
