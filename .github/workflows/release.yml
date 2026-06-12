@@ -36,10 +36,21 @@ jobs:
           rmdir /s /q publish_tmp
 
       - name: Install Inno Setup
-        shell: cmd
+        shell: powershell
         run: |
           choco install innosetup --no-progress -y
-          echo "ISCC_DIR=C:\Program Files (x86)\Inno Setup 6" >> %GITHUB_ENV%
+          $paths = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+          )
+          $found = $paths | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if ($found) {
+            $dir = Split-Path $found -Parent
+            "ISCC_DIR=$dir" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+          } else {
+            throw "ISCC.exe not found"
+          }
 
       - name: Build Setup.exe
         shell: cmd
