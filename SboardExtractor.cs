@@ -14,8 +14,8 @@ using AutoUpdaterDotNET;
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.2.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.2.1.0")]
+[assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
 
 namespace SboardExtractor
 {
@@ -164,8 +164,9 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.2.1.0";
+        private const string AppVersion = "1.3.0.0";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
+        private static ManualResetEvent _extractPause = new ManualResetEvent(true);
         private const byte VK_UP = 0x26;
         private const byte VK_LEFT = 0x25;
         private const byte VK_RIGHT = 0x27;
@@ -179,6 +180,13 @@ namespace SboardExtractor
             for (int i = 0; i < args.Length; i++)
                 if (args[i] == "--console" || args[i] == "-c" || args[i] == "--discover-login" || args[i] == "--discover-menu" || args[i] == "--test-menu-id" || args[i] == "--test-all-menu" || args[i] == "--extract-details" || args[i] == "-e")
                 { ConsoleMain(args); return; }
+
+            if (!NativeMethods.IsUserAnAdmin())
+            {
+                string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                NativeMethods.ShellExecuteW(IntPtr.Zero, "runas", exePath, "", null, 1);
+                return;
+            }
 
             if (!IsDotNetInstalled())
             {
@@ -377,6 +385,8 @@ namespace SboardExtractor
             {
                 var item = items[idx];
                 string tag = string.Format("{0:D2}/{1:D2} ", idx + 1, items.Count);
+                _extractPause.WaitOne();
+                RestoreWindow(sessionHwnd);
                 DoSearch(sessionHwnd, item.DeptIndex, item.BizNum);
                 Thread.Sleep(500);
                 Progress(tag + "[" + item.BizNum + "] 추출중...");
@@ -589,6 +599,11 @@ namespace SboardExtractor
                 try
                 {
                     Log("서버에 연결중");
+                    var client = new System.Net.WebClient();
+                    client.Encoding = Encoding.UTF8;
+                    string xml = client.DownloadString(UpdateXmlUrl);
+                    var doc = new System.Xml.XmlDocument();
+                    doc.LoadXml(xml);
                     Log("서버에 연결되었습니다.");
 
                     string sboardPath = FindSboardExe();
@@ -598,6 +613,11 @@ namespace SboardExtractor
 
                     Log(".NET 버전 : " + Environment.Version);
                     Log("현재버전 : " + AppVersion);
+
+                    var versionNode = doc.SelectSingleNode("/item/version");
+                    if (versionNode != null)
+                        Log("최신버전 : " + versionNode.InnerText.Trim());
+
                     Log("업데이트 확인중...");
 
                     StartAutoUpdater();
@@ -620,6 +640,7 @@ namespace SboardExtractor
             private ListBox lstLog;
             private Label lblItem;
             private Button btnClose;
+            private Button btnPause;
             private Thread workThread;
             private string _desktopXlsx;
 
@@ -656,6 +677,22 @@ namespace SboardExtractor
                     TextAlign = ContentAlignment.MiddleLeft
                 };
 
+                btnPause = new Button
+                {
+                    Text = "일시정지",
+                    Location = new Point(100, 358),
+                    Size = new Size(120, 30),
+                    FlatStyle = FlatStyle.Flat,
+                    FlatAppearance = { BorderSize = 0 },
+                    BackColor = Color.FromArgb(52, 120, 246),
+                    ForeColor = Color.White,
+                    Font = new Font("맑은 고딕", 9),
+                    Cursor = Cursors.Hand
+                };
+                btnPause.Click += BtnPause_Click;
+                btnPause.MouseEnter += (s, e) => btnPause.BackColor = Color.FromArgb(42, 100, 220);
+                btnPause.MouseLeave += (s, e) => btnPause.BackColor = Color.FromArgb(52, 120, 246);
+
                 btnClose = new Button
                 {
                     Text = "종료 (Enter)",
@@ -675,6 +712,7 @@ namespace SboardExtractor
 
                 Controls.Add(lstLog);
                 Controls.Add(lblItem);
+                Controls.Add(btnPause);
                 Controls.Add(btnClose);
 
                 Shown += (s, args) =>
@@ -682,6 +720,22 @@ namespace SboardExtractor
                     workThread = new Thread(() => DoWork(userId, password));
                     workThread.Start();
                 };
+            }
+
+            void BtnPause_Click(object sender, EventArgs e)
+            {
+                if (_extractPause.WaitOne(0))
+                {
+                    _extractPause.Reset();
+                    btnPause.Text = "다시시작";
+                    AddLog("일시정지됨");
+                }
+                else
+                {
+                    _extractPause.Set();
+                    btnPause.Text = "일시정지";
+                    AddLog("다시시작");
+                }
             }
 
             void AddLog(string msg)
@@ -735,7 +789,16 @@ namespace SboardExtractor
                 else
                 {
                     AddLog(msg);
-                    lblItem.Text = msg;
+                    if (msg.Contains("추출중..."))
+                        lblItem.Text = "추출중";
+                    else if (msg.Contains("추출완료"))
+                    {
+                        int idx = msg.LastIndexOf("] ") + 2;
+                        if (idx >= 2) lblItem.Text = msg.Substring(idx);
+                        else lblItem.Text = msg;
+                    }
+                    else
+                        lblItem.Text = msg;
                 }
             }
         }
