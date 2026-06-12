@@ -31,6 +31,7 @@ namespace SboardExtractor
         public const byte VK_SHIFT = 0x10;
         public const int SW_RESTORE = 9;
         public const int SW_SHOW = 5;
+        public const int SW_SHOWMINIMIZED = 6;
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         public static extern int GetWindowTextLengthW(IntPtr hWnd);
@@ -343,6 +344,8 @@ namespace SboardExtractor
             Progress("세션 대기중...");
             sessionHwnd = WaitForSession(15);
             if (sessionHwnd == IntPtr.Zero) { Progress("세션 연결 실패"); return; }
+            NativeMethods.ShowWindow(sessionHwnd, NativeMethods.SW_SHOWMINIMIZED);
+            Thread.Sleep(300);
 
             Progress("메뉴 진입중...");
             NativeMethods.PostMessageW(sessionHwnd, NativeMethods.WM_COMMAND, (IntPtr)14, IntPtr.Zero);
@@ -1620,7 +1623,7 @@ namespace SboardExtractor
                 }
             }
             var psi = new ProcessStartInfo(exePath)
-            { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Minimized };
+            { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Normal };
             Process.Start(psi);
         }
 
