@@ -42,6 +42,10 @@ namespace SboardExtractor
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
         [DllImport("user32.dll")]
+        public static extern bool IsIconic(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll")]
         public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, IntPtr dwExtraInfo);
         [DllImport("user32.dll")]
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
@@ -280,6 +284,7 @@ namespace SboardExtractor
                 sessionHwnd = FindWindowByTitle(SessionPrefix, false);
                 if (sessionHwnd == IntPtr.Zero) sessionHwnd = FindWindowByTitle("Sboard", false);
                 if (sessionHwnd == IntPtr.Zero) { Progress("세션 없음"); return; }
+                RestoreWindow(sessionHwnd);
                 ExtractContractDetails(sessionHwnd);
                 return;
             }
@@ -303,6 +308,7 @@ namespace SboardExtractor
             Progress("세션 대기중...");
             sessionHwnd = WaitForSession(15);
             if (sessionHwnd == IntPtr.Zero) { Progress("세션 연결 실패"); return; }
+            RestoreWindow(sessionHwnd);
 
             Progress("메뉴 진입중...");
             NativeMethods.PostMessageW(sessionHwnd, NativeMethods.WM_COMMAND, (IntPtr)14, IntPtr.Zero);
@@ -1477,12 +1483,17 @@ namespace SboardExtractor
             return IntPtr.Zero;
         }
 
+        static void RestoreWindow(IntPtr hwnd)
+        {
+            if (NativeMethods.IsIconic(hwnd))
+                NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+        }
+
         static IntPtr FindWindowByTitle(string titlePart, bool exactMatch)
         {
             IntPtr found = IntPtr.Zero;
             NativeMethods.EnumWindows((hwnd, _) =>
             {
-                if (!NativeMethods.IsWindowVisible(hwnd)) return true;
                 int len = NativeMethods.GetWindowTextLengthW(hwnd);
                 if (len > 0)
                 {
@@ -1502,7 +1513,6 @@ namespace SboardExtractor
             var results = new List<Tuple<IntPtr, string>>();
             NativeMethods.EnumWindows((hwnd, _) =>
             {
-                if (!NativeMethods.IsWindowVisible(hwnd)) return true;
                 int len = NativeMethods.GetWindowTextLengthW(hwnd);
                 if (len > 0)
                 {
@@ -1525,7 +1535,6 @@ namespace SboardExtractor
                 uint wpid;
                 NativeMethods.GetWindowThreadProcessId(hwnd, out wpid);
                 if (wpid != pid) return true;
-                if (!NativeMethods.IsWindowVisible(hwnd)) return true;
                 int len = NativeMethods.GetWindowTextLengthW(hwnd);
                 if (len > 0)
                 {
