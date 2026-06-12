@@ -821,55 +821,60 @@ namespace SboardExtractor
         static List<SearchItem> ReadXlsxBizList(string xlsxPath)
         {
             var result = new List<SearchItem>();
-            string connStr = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + xlsxPath + ";Extended Properties=\"Excel 12.0;HDR=YES;\"";
+            dynamic excel = null;
+            dynamic workbook = null;
+            dynamic sheets = null;
+            dynamic sheet = null;
             try
             {
-                using (var conn = new System.Data.OleDb.OleDbConnection(connStr))
+                Type excelType = Type.GetTypeFromProgID("Excel.Application");
+                if (excelType == null) return result;
+                excel = Activator.CreateInstance(excelType);
+                excel.Visible = false;
+                excel.DisplayAlerts = false;
+                workbook = excel.Workbooks.Open(xlsxPath);
+                sheets = workbook.Sheets;
+                int maxCount = 0;
+                try
                 {
-                    conn.Open();
-                    var dt = conn.GetOleDbSchemaTable(System.Data.OleDb.OleDbSchemaGuid.Tables, null);
-                    var sheetNames = new List<string>();
-                    foreach (System.Data.DataRow r in dt.Rows)
-                        sheetNames.Add(r["TABLE_NAME"].ToString());
-
-                    string sheetName = "";
-                    int maxRows = 0;
-                    foreach (string name in sheetNames)
+                    foreach (dynamic s in sheets)
                     {
-                        if (!name.EndsWith("$")) continue;
-                        try
-                        {
-                            using (var cntCmd = conn.CreateCommand())
-                            {
-                                cntCmd.CommandText = "SELECT COUNT(*) FROM [" + name + "]";
-                                int cnt = (int)cntCmd.ExecuteScalar();
-                                if (cnt > maxRows) { maxRows = cnt; sheetName = name; }
-                            }
-                        }
-                        catch { }
-                    }
-                    if (string.IsNullOrEmpty(sheetName)) return result;
-
-                    string sql = "SELECT * FROM [" + sheetName + "]";
-                    using (var da = new System.Data.OleDb.OleDbDataAdapter(sql, conn))
-                    {
-                        var data = new System.Data.DataTable();
-                        da.Fill(data);
-                        foreach (System.Data.DataRow row in data.Rows)
-                        {
-                            string bizNum = "";
-                            if (row[1] != null && row[1] != DBNull.Value)
-                                bizNum = row[1].ToString().Trim();
-                            if (string.IsNullOrEmpty(bizNum)) continue;
-                            int dept = 0;
-                            if (row[2] != null && row[2] != DBNull.Value)
-                                int.TryParse(row[2].ToString().Trim(), out dept);
-                            result.Add(new SearchItem { BizNum = bizNum, DeptIndex = dept });
-                        }
+                        int cnt = s.UsedRange.Rows.Count;
+                        if (cnt > maxCount) { maxCount = cnt; sheet = s; }
                     }
                 }
+                catch (Exception) { }
+                if (sheet == null) { workbook.Close(false); return result; }
+
+                int lastRow = sheet.UsedRange.Rows.Count;
+                for (int r = 2; r <= lastRow; r++)
+                {
+                    object val = sheet.Cells[r, 2].Value2;
+                    if (val == null || val == DBNull.Value) continue;
+                    string bizNum = val.ToString().Trim();
+                    if (string.IsNullOrEmpty(bizNum)) continue;
+                    int dept = 0;
+                    try
+                    {
+                        object deptVal = sheet.Cells[r, 3].Value2;
+                        if (deptVal != null && deptVal != DBNull.Value)
+                            int.TryParse(deptVal.ToString().Trim(), out dept);
+                    }
+                    catch { }
+                    result.Add(new SearchItem { BizNum = bizNum, DeptIndex = dept });
+                }
+                try { workbook.Close(false); } catch (Exception) { }
             }
             catch (Exception ex) { Console.WriteLine("  xlsx 읽기 오류: " + ex.Message); }
+            finally
+            {
+                try { if (sheets != null) Marshal.ReleaseComObject(sheets); } catch (Exception) { }
+                try { if (sheet != null) Marshal.ReleaseComObject(sheet); } catch (Exception) { }
+                try { if (workbook != null) Marshal.ReleaseComObject(workbook); } catch (Exception) { }
+                try { if (excel != null) { excel.Quit(); Marshal.ReleaseComObject(excel); } } catch (Exception) { }
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
             return result;
         }
 
