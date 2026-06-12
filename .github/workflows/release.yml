@@ -24,17 +24,6 @@ jobs:
         run: |
           dotnet publish SboardExtractor.csproj -c Release -r win-x64 --self-contained true -o publish
 
-      - name: Build updater
-        shell: cmd
-        run: |
-          dotnet publish Updater.csproj -c Release -r win-x64 --self-contained true -o publish_tmp
-          copy /y "publish_tmp\Updater.exe" "publish\Updater.exe"
-          copy /y "publish_tmp\Updater.dll" "publish\Updater.dll"
-          copy /y "publish_tmp\Updater.pdb" "publish\Updater.pdb"
-          copy /y "publish_tmp\Updater.deps.json" "publish\Updater.deps.json"
-          copy /y "publish_tmp\Updater.runtimeconfig.json" "publish\Updater.runtimeconfig.json"
-          rmdir /s /q publish_tmp
-
       - name: Install Inno Setup
         shell: powershell
         run: |

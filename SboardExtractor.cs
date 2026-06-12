@@ -7,14 +7,15 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing;
+using AutoUpdaterDotNET;
 
 [assembly: System.Reflection.AssemblyTitle("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyDescription("Sboard 계약 데이터 자동 추출")]
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.2.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.2.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.2.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.2.1.0")]
 
 namespace SboardExtractor
 {
@@ -163,7 +164,7 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.1.1.0";
+        private const string AppVersion = "1.2.1.0";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private const byte VK_UP = 0x26;
         private const byte VK_LEFT = 0x25;
@@ -196,6 +197,16 @@ namespace SboardExtractor
                 if (!updateForm.ShouldLaunch) return;
             }
             Application.Run(new LoginForm());
+        }
+
+        static void StartAutoUpdater()
+        {
+            AutoUpdater.Synchronous = true;
+            AutoUpdater.ReportErrors = false;
+            AutoUpdater.RunUpdateAsAdmin = true;
+            AutoUpdater.ShowRemindLaterButton = false;
+            AutoUpdater.Mandatory = true;
+            AutoUpdater.Start(UpdateXmlUrl);
         }
 
         static void ConsoleMain(string[] args)
@@ -435,62 +446,7 @@ namespace SboardExtractor
             }
         }
 
-        // ========== Update Check ==========
-
-        static bool CheckForUpdate(out string latestVersion, out string downloadUrl)
-        {
-            latestVersion = null; downloadUrl = null;
-            try
-            {
-                var client = new System.Net.WebClient();
-                client.Encoding = Encoding.UTF8;
-                string xml = client.DownloadString(UpdateXmlUrl);
-                var doc = new System.Xml.XmlDocument();
-                doc.LoadXml(xml);
-                var versionNode = doc.SelectSingleNode("/item/version");
-                var urlNode = doc.SelectSingleNode("/item/url");
-                if (versionNode == null || urlNode == null) return false;
-                latestVersion = versionNode.InnerText.Trim();
-                downloadUrl = urlNode.InnerText.Trim();
-                var current = new Version(AppVersion);
-                var latest = new Version(latestVersion);
-                return latest > current;
-            }
-            catch { return false; }
-        }
-
-        static void SelfUpdate(string downloadUrl)
-        {
-            string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            string exeDir = Path.GetDirectoryName(exePath);
-            string zipPath = Path.Combine(Path.GetTempPath(), "SboardExtractor_Update.zip");
-            string extractDir = Path.Combine(Path.GetTempPath(), "SboardExtractor_Update_" + Guid.NewGuid().ToString("N"));
-
-            try
-            {
-                using (var client = new System.Net.WebClient())
-                    client.DownloadFile(downloadUrl, zipPath);
-
-                System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, extractDir);
-
-                string updaterPath = Path.Combine(exeDir, "Updater.exe");
-                if (!File.Exists(updaterPath))
-                    updaterPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Updater.exe");
-                if (!File.Exists(updaterPath)) return;
-
-                string desktopXlsx = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                    "팀장회의 취합.xlsx");
-                string xlsxArg = File.Exists(desktopXlsx) ? " \"" + desktopXlsx + "\"" : "";
-
-                Process.Start(updaterPath,
-                    Process.GetCurrentProcess().Id + " \""
-                    + extractDir + "\" \""
-                    + exePath + "\""
-                    + xlsxArg);
-            }
-            catch { }
-        }
+        // ========== Update Check (via AutoUpdater.NET) ==========
 
         // ========== Form Classes ==========
 
@@ -633,11 +589,6 @@ namespace SboardExtractor
                 try
                 {
                     Log("서버에 연결중");
-                    var client = new System.Net.WebClient();
-                    client.Encoding = Encoding.UTF8;
-                    string xml = client.DownloadString(UpdateXmlUrl);
-                    var doc = new System.Xml.XmlDocument();
-                    doc.LoadXml(xml);
                     Log("서버에 연결되었습니다.");
 
                     string sboardPath = FindSboardExe();
@@ -646,41 +597,14 @@ namespace SboardExtractor
                         Log(" ※ Sboard.exe를 찾을 수 없습니다.");
 
                     Log(".NET 버전 : " + Environment.Version);
-
-                    var versionNode = doc.SelectSingleNode("/item/version");
-                    var urlNode = doc.SelectSingleNode("/item/url");
-                    if (versionNode == null || urlNode == null)
-                    {
-                        Log("업데이트 정보가 없습니다.");
-                        Thread.Sleep(1500);
-                        BeginInvoke((Action)Close);
-                        return;
-                    }
-
-                    string latestVersion = versionNode.InnerText.Trim();
-                    string downloadUrl = urlNode.InnerText.Trim();
-                    Log("최신버전 : " + latestVersion);
                     Log("현재버전 : " + AppVersion);
+                    Log("업데이트 확인중...");
 
-                    var current = new Version(AppVersion);
-                    var latest = new Version(latestVersion);
-                    if (latest > current)
-                    {
-                        Log("새 버전 다운로드 중...");
-                        string zipPath = Path.Combine(Path.GetTempPath(), "SboardExtractor_Update.zip");
-                        client.DownloadFile(downloadUrl, zipPath);
-                        Log("다운로드 완료.");
-                        Thread.Sleep(500);
-                        ShouldLaunch = false;
-                        SelfUpdate(downloadUrl);
-                        BeginInvoke((Action)Close);
-                    }
-                    else
-                    {
-                        Log("최신버전입니다.");
-                        Thread.Sleep(1500);
-                        BeginInvoke((Action)Close);
-                    }
+                    StartAutoUpdater();
+
+                    Log("최신버전입니다.");
+                    Thread.Sleep(1500);
+                    BeginInvoke((Action)Close);
                 }
                 catch (Exception ex)
                 {
