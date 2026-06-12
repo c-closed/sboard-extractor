@@ -14,8 +14,8 @@ using AutoUpdaterDotNET;
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.4.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.4.1.0")]
+[assembly: System.Reflection.AssemblyVersion("1.4.2.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.2.0")]
 
 namespace SboardExtractor
 {
@@ -165,7 +165,7 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.4.1.0";
+        private const string AppVersion = "1.4.2.0";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private static ManualResetEvent _extractPause = new ManualResetEvent(true);
         private const byte VK_UP = 0x26;
@@ -1464,37 +1464,17 @@ namespace SboardExtractor
                 NativeMethods.SendMessageW(edits[1], NativeMethods.WM_SETTEXT, IntPtr.Zero, pw);
 
             Thread.Sleep(200);
-            IntPtr loginButton = FindLoginButton(hwnd);
-            if (loginButton != IntPtr.Zero)
-                NativeMethods.SendMessageW(loginButton, NativeMethods.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+            NativeMethods.SetForegroundWindow(hwnd);
+            Thread.Sleep(100);
+            PressKey(NativeMethods.VK_RETURN);
         }
 
-        static IntPtr FindLoginButton(IntPtr hwnd)
+        static void PressKey(byte vk)
         {
-            IntPtr found = IntPtr.Zero;
-            NativeMethods.EnumChildWindows(hwnd, (child, _) =>
-            {
-                StringBuilder sb = new StringBuilder(256);
-                NativeMethods.GetClassNameW(child, sb, sb.Capacity);
-                string cls = sb.ToString();
-                if (cls == "TButton" || cls == "TBitBtn" || cls == "Button")
-                {
-                    int len = NativeMethods.GetWindowTextLengthW(child);
-                    if (len > 0)
-                    {
-                        var sb2 = new StringBuilder(len + 1);
-                        NativeMethods.GetWindowTextW(child, sb2, sb2.Capacity);
-                        string text = sb2.ToString().Trim();
-                        if (text.Contains("로그인") || text == "확인" || text.ToUpperInvariant() == "OK")
-                        {
-                            found = child;
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            }, IntPtr.Zero);
-            return found;
+            NativeMethods.keybd_event(vk, 0, 0, IntPtr.Zero);
+            Thread.Sleep(20);
+            NativeMethods.keybd_event(vk, 0, NativeMethods.KEYEVENTF_KEYUP, IntPtr.Zero);
+            Thread.Sleep(20);
         }
 
         static IntPtr WaitForWindow(string title, int timeoutSec)
