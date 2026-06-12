@@ -197,6 +197,23 @@ namespace SboardExtractor
                 return;
             }
 
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            AppDomain.CurrentDomain.UnhandledException += delegate(object sender, UnhandledExceptionEventArgs e)
+            {
+                string msg = "오류가 발생했습니다: " + ((Exception)e.ExceptionObject).Message;
+                MessageBox.Show(msg, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            };
+            Application.ThreadException += delegate(object sender, ThreadExceptionEventArgs e)
+            {
+                string msg = "오류가 발생했습니다: " + e.Exception.Message;
+                MessageBox.Show(msg, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            };
+            TaskScheduler.UnobservedTaskException += delegate(object sender, UnobservedTaskExceptionEventArgs e)
+            {
+                string msg = "오류가 발생했습니다: " + e.Exception.InnerException?.Message ?? e.Exception.Message;
+                MessageBox.Show(msg, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                e.SetObserved();
+            };
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             using (var updateForm = new UpdateForm())
