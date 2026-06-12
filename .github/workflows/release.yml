@@ -65,7 +65,9 @@ jobs:
       - name: Package
         shell: powershell
         run: |
-          Compress-Archive -Path "publish\*","_Sboard 추출기.cmd","install.cmd","Sboard 추출기.msi" -DestinationPath SboardExtractor_Updated.zip -Force
+          $items = @(Get-ChildItem -Path "publish" -File)
+          $items += Get-Item -LiteralPath "_Sboard 추출기.cmd","install.cmd","Sboard 추출기.msi" -ErrorAction SilentlyContinue
+          Compress-Archive -LiteralPath $items.FullName -DestinationPath SboardExtractor_Updated.zip -Force
 
       - name: Release
         uses: softprops/action-gh-release@v2
