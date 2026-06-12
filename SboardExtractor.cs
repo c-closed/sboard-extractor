@@ -1436,6 +1436,10 @@ namespace SboardExtractor
 
         static void InputCredentials(IntPtr hwnd, string id, string pw)
         {
+            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOW);
+            NativeMethods.SetForegroundWindow(hwnd);
+            Thread.Sleep(300);
+
             List<IntPtr> edits = new List<IntPtr>();
             NativeMethods.EnumChildWindows(hwnd, (child, _) =>
             {
@@ -1447,14 +1451,23 @@ namespace SboardExtractor
                 return true;
             }, IntPtr.Zero);
 
-            if (edits.Count >= 1)
-                NativeMethods.SendMessageW(edits[0], NativeMethods.WM_SETTEXT, IntPtr.Zero, new StringBuilder(pw));
             if (edits.Count >= 2)
-                NativeMethods.SendMessageW(edits[1], NativeMethods.WM_SETTEXT, IntPtr.Zero, new StringBuilder(id));
+            {
+                edits.Sort(delegate(IntPtr a, IntPtr b)
+                {
+                    NativeMethods.RECT ra, rb;
+                    NativeMethods.GetWindowRect(a, out ra);
+                    NativeMethods.GetWindowRect(b, out rb);
+                    return ra.Top.CompareTo(rb.Top);
+                });
+            }
+
+            if (edits.Count >= 1 && !string.IsNullOrEmpty(id))
+                NativeMethods.SendMessageW(edits[0], NativeMethods.WM_SETTEXT, IntPtr.Zero, id);
+            if (edits.Count >= 2 && !string.IsNullOrEmpty(pw))
+                NativeMethods.SendMessageW(edits[1], NativeMethods.WM_SETTEXT, IntPtr.Zero, pw);
 
             Thread.Sleep(200);
-            NativeMethods.SetForegroundWindow(hwnd);
-            Thread.Sleep(100);
             PressKey(NativeMethods.VK_RETURN);
         }
 
