@@ -34,7 +34,7 @@ jobs:
         run: |
           dotnet tool install -g wix --version 7.0.0 2>&1
           if (-not $?) { dotnet tool update -g wix --version 7.0.0 2>&1 }
-          wix eula --acceptEula 2>&1
+          wix eula --acceptEula yes 2>&1
 
       - name: Generate Files.wxs
         shell: powershell
