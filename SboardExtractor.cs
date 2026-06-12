@@ -320,7 +320,6 @@ namespace SboardExtractor
                 sessionHwnd = FindWindowByTitle(SessionPrefix, false);
                 if (sessionHwnd == IntPtr.Zero) sessionHwnd = FindWindowByTitle("Sboard", false);
                 if (sessionHwnd == IntPtr.Zero) { Progress("세션 없음"); return; }
-                RestoreWindow(sessionHwnd);
                 ExtractContractDetails(sessionHwnd);
                 return;
             }
@@ -344,7 +343,6 @@ namespace SboardExtractor
             Progress("세션 대기중...");
             sessionHwnd = WaitForSession(15);
             if (sessionHwnd == IntPtr.Zero) { Progress("세션 연결 실패"); return; }
-            RestoreWindow(sessionHwnd);
 
             Progress("메뉴 진입중...");
             NativeMethods.PostMessageW(sessionHwnd, NativeMethods.WM_COMMAND, (IntPtr)14, IntPtr.Zero);
@@ -403,7 +401,6 @@ namespace SboardExtractor
                 var item = items[idx];
                 string tag = string.Format("{0:D2}/{1:D2} ", idx + 1, items.Count);
                 _extractPause.WaitOne();
-                RestoreWindow(sessionHwnd);
                 DoSearch(sessionHwnd, item.DeptIndex, item.BizNum);
                 Thread.Sleep(500);
                 Progress(tag + "[" + item.BizNum + "] 추출중...");
@@ -1436,10 +1433,6 @@ namespace SboardExtractor
 
         static void InputCredentials(IntPtr hwnd, string id, string pw)
         {
-            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_SHOW);
-            NativeMethods.SetForegroundWindow(hwnd);
-            Thread.Sleep(300);
-
             List<IntPtr> edits = new List<IntPtr>();
             NativeMethods.EnumChildWindows(hwnd, (child, _) =>
             {
@@ -1468,15 +1461,37 @@ namespace SboardExtractor
                 NativeMethods.SendMessageW(edits[1], NativeMethods.WM_SETTEXT, IntPtr.Zero, pw);
 
             Thread.Sleep(200);
-            PressKey(NativeMethods.VK_RETURN);
+            IntPtr loginButton = FindLoginButton(hwnd);
+            if (loginButton != IntPtr.Zero)
+                NativeMethods.SendMessageW(loginButton, NativeMethods.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
         }
 
-        static void PressKey(byte vk)
+        static IntPtr FindLoginButton(IntPtr hwnd)
         {
-            NativeMethods.keybd_event(vk, 0, 0, IntPtr.Zero);
-            Thread.Sleep(20);
-            NativeMethods.keybd_event(vk, 0, NativeMethods.KEYEVENTF_KEYUP, IntPtr.Zero);
-            Thread.Sleep(20);
+            IntPtr found = IntPtr.Zero;
+            NativeMethods.EnumChildWindows(hwnd, (child, _) =>
+            {
+                StringBuilder sb = new StringBuilder(256);
+                NativeMethods.GetClassNameW(child, sb, sb.Capacity);
+                string cls = sb.ToString();
+                if (cls == "TButton" || cls == "TBitBtn" || cls == "Button")
+                {
+                    int len = NativeMethods.GetWindowTextLengthW(child);
+                    if (len > 0)
+                    {
+                        var sb2 = new StringBuilder(len + 1);
+                        NativeMethods.GetWindowTextW(child, sb2, sb2.Capacity);
+                        string text = sb2.ToString().Trim();
+                        if (text.Contains("로그인") || text == "확인" || text.ToUpperInvariant() == "OK")
+                        {
+                            found = child;
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }, IntPtr.Zero);
+            return found;
         }
 
         static IntPtr WaitForWindow(string title, int timeoutSec)
@@ -1605,7 +1620,7 @@ namespace SboardExtractor
                 }
             }
             var psi = new ProcessStartInfo(exePath)
-            { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Normal };
+            { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Minimized };
             Process.Start(psi);
         }
 
