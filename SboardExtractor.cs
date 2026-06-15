@@ -14,8 +14,8 @@ using AutoUpdaterDotNET;
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.4.4.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.4.4.0")]
+[assembly: System.Reflection.AssemblyVersion("1.4.5.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.5.0")]
 
 namespace SboardExtractor
 {
@@ -165,7 +165,7 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.4.4.0";
+        private const string AppVersion = "1.4.5.0";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private static ManualResetEvent _extractPause = new ManualResetEvent(true);
         private const byte VK_UP = 0x26;
@@ -1062,7 +1062,7 @@ namespace SboardExtractor
             {
                 var sb = new StringBuilder(256);
                 NativeMethods.GetClassNameW(child, sb, sb.Capacity);
-                if (sb.ToString() == "TTabSheet" && NativeMethods.IsWindowVisible(child))
+                if (sb.ToString() == "TTabSheet")
                     return child;
                 child = NativeMethods.GetWindow(child, NativeMethods.GW_HWNDNEXT);
             }
@@ -1743,7 +1743,7 @@ namespace SboardExtractor
             {
                 var sb = new StringBuilder(256);
                 NativeMethods.GetClassNameW(ch, sb, sb.Capacity);
-                if (sb.ToString() == "TTabSheet" && NativeMethods.IsWindowVisible(ch))
+                if (sb.ToString() == "TTabSheet")
                 { tabSheet = ch; break; }
                 ch = NativeMethods.GetWindow(ch, NativeMethods.GW_HWNDNEXT);
             }
