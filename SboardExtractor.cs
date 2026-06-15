@@ -14,8 +14,8 @@ using AutoUpdaterDotNET;
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.4.5.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.4.5.0")]
+[assembly: System.Reflection.AssemblyVersion("1.4.6.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.6.0")]
 
 namespace SboardExtractor
 {
@@ -95,6 +95,8 @@ namespace SboardExtractor
 
         [DllImport("kernel32.dll")]
         public static extern bool AllocConsole();
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern bool DeleteFileW(string lpFileName);
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetMenu(IntPtr hWnd);
@@ -165,7 +167,7 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.4.5.0";
+        private const string AppVersion = "1.4.6.0";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private static ManualResetEvent _extractPause = new ManualResetEvent(true);
         private const byte VK_UP = 0x26;
@@ -344,7 +346,6 @@ namespace SboardExtractor
             Progress("세션 대기중...");
             sessionHwnd = WaitForSession(15);
             if (sessionHwnd == IntPtr.Zero) { Progress("세션 연결 실패"); return; }
-            NativeMethods.ShowWindow(sessionHwnd, NativeMethods.SW_SHOWMINIMIZED);
             Thread.Sleep(300);
 
             Progress("메뉴 진입중...");
@@ -404,6 +405,11 @@ namespace SboardExtractor
                 var item = items[idx];
                 string tag = string.Format("{0:D2}/{1:D2} ", idx + 1, items.Count);
                 _extractPause.WaitOne();
+                if (NativeMethods.IsIconic(sessionHwnd))
+                {
+                    NativeMethods.ShowWindow(sessionHwnd, NativeMethods.SW_RESTORE);
+                    Thread.Sleep(300);
+                }
                 DoSearch(sessionHwnd, item.DeptIndex, item.BizNum);
                 Thread.Sleep(500);
                 Progress(tag + "[" + item.BizNum + "] 추출중...");
@@ -822,6 +828,12 @@ namespace SboardExtractor
 
         // ========== End Form Classes ==========
 
+        static void UnblockFile(string path)
+        {
+            try { NativeMethods.DeleteFileW(path + ":Zone.Identifier"); }
+            catch (Exception) { }
+        }
+
         static List<SearchItem> ReadXlsxBizList(string xlsxPath)
         {
             var result = new List<SearchItem>();
@@ -836,6 +848,7 @@ namespace SboardExtractor
                 excel = Activator.CreateInstance(excelType);
                 excel.Visible = false;
                 excel.DisplayAlerts = false;
+                UnblockFile(xlsxPath);
                 workbook = excel.Workbooks.Open(xlsxPath);
                 sheets = workbook.Sheets;
                 int maxCount = 0;
@@ -922,6 +935,7 @@ namespace SboardExtractor
                 excel = Activator.CreateInstance(excelType);
                 excel.Visible = false;
                 excel.DisplayAlerts = false;
+                UnblockFile(xlsxPath);
                 workbook = excel.Workbooks.Open(xlsxPath);
                 sheets = workbook.Sheets;
                 int maxCount = 0;
