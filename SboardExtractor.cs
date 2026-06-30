@@ -14,8 +14,8 @@ using AutoUpdaterDotNET;
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.4.6.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.4.6.0")]
+[assembly: System.Reflection.AssemblyVersion("1.4.7.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.7.0")]
 
 namespace SboardExtractor
 {
@@ -167,7 +167,7 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.4.6.0";
+        private const string AppVersion = "1.4.7.0";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private static ManualResetEvent _extractPause = new ManualResetEvent(true);
         private const byte VK_UP = 0x26;
@@ -661,7 +661,6 @@ namespace SboardExtractor
         class ProgressForm : Form
         {
             private ListBox lstLog;
-            private Label lblItem;
             private Button btnClose;
             private Button btnPause;
             private Thread workThread;
@@ -681,7 +680,7 @@ namespace SboardExtractor
                 lstLog = new ListBox
                 {
                     Location = new Point(12, 12),
-                    Size = new Size(580, 310),
+                    Size = new Size(580, 338),
                     Font = new Font("Consolas", 9),
                     HorizontalScrollbar = true,
                     SelectionMode = SelectionMode.None,
@@ -690,20 +689,10 @@ namespace SboardExtractor
                     BorderStyle = BorderStyle.FixedSingle
                 };
 
-                lblItem = new Label
-                {
-                    Text = "준비중...",
-                    Location = new Point(12, 332),
-                    Size = new Size(580, 22),
-                    Font = new Font("맑은 고딕", 9),
-                    ForeColor = Color.FromArgb(80, 80, 80),
-                    TextAlign = ContentAlignment.MiddleLeft
-                };
-
                 btnPause = new Button
                 {
                     Text = "일시정지",
-                    Location = new Point(100, 358),
+                    Location = new Point(250, 358),
                     Size = new Size(120, 30),
                     FlatStyle = FlatStyle.Flat,
                     FlatAppearance = { BorderSize = 0 },
@@ -719,7 +708,7 @@ namespace SboardExtractor
                 btnClose = new Button
                 {
                     Text = "종료 (Enter)",
-                    Location = new Point(240, 358),
+                    Location = new Point(250, 358),
                     Size = new Size(120, 30),
                     FlatStyle = FlatStyle.Flat,
                     FlatAppearance = { BorderSize = 0 },
@@ -734,7 +723,6 @@ namespace SboardExtractor
                 btnClose.MouseLeave += (s, e) => btnClose.BackColor = Color.FromArgb(52, 120, 246);
 
                 Controls.Add(lstLog);
-                Controls.Add(lblItem);
                 Controls.Add(btnPause);
                 Controls.Add(btnClose);
 
@@ -766,6 +754,15 @@ namespace SboardExtractor
                 if (InvokeRequired)
                 { try { Invoke((Action)(() => AddLog(msg))); } catch { } return; }
                 lstLog.Items.Add("[" + DateTime.Now.ToString("HH:mm:ss") + "] " + msg);
+                lstLog.TopIndex = lstLog.Items.Count - 1;
+            }
+
+            void ReplaceLastLog(string msg)
+            {
+                if (InvokeRequired)
+                { try { Invoke((Action)(() => ReplaceLastLog(msg))); } catch { } return; }
+                if (lstLog.Items.Count > 0)
+                    lstLog.Items[lstLog.Items.Count - 1] = "[" + DateTime.Now.ToString("HH:mm:ss") + "] " + msg;
                 lstLog.TopIndex = lstLog.Items.Count - 1;
             }
 
@@ -806,22 +803,22 @@ namespace SboardExtractor
             {
                 if (msg.StartsWith("---"))
                 {
-                    lblItem.Text = "";
                     AddLog(msg.Replace("---", "").Trim());
                 }
                 else
                 {
-                    AddLog(msg);
-                    if (msg.Contains("추출중..."))
-                        lblItem.Text = "추출중";
-                    else if (msg.Contains("추출완료"))
+                    if (msg.Contains("추출완료") || msg.Contains("데이터없음"))
                     {
-                        int idx = msg.LastIndexOf("] ") + 2;
-                        if (idx >= 2) lblItem.Text = msg.Substring(idx);
-                        else lblItem.Text = msg;
+                        string last = lstLog.Items.Count > 0 ? lstLog.Items[lstLog.Items.Count - 1].ToString() : "";
+                        if (last.Contains("추출중"))
+                            ReplaceLastLog(msg);
+                        else
+                            AddLog(msg);
                     }
                     else
-                        lblItem.Text = msg;
+                    {
+                        AddLog(msg);
+                    }
                 }
             }
         }
