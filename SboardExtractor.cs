@@ -720,7 +720,9 @@ namespace SboardExtractor
                 btnClose.Click += (s, e) =>
                 {
                     try { KillSboard(); } catch { }
+                    try { _extractPause.Set(); } catch { }
                     Close();
+                    Application.Exit();
                 };
                 btnClose.MouseEnter += (s, e) => btnClose.BackColor = Color.FromArgb(220, 50, 50);
                 btnClose.MouseLeave += (s, e) => btnClose.BackColor = Color.FromArgb(200, 70, 70);
@@ -732,6 +734,7 @@ namespace SboardExtractor
                 Shown += (s, args) =>
                 {
                     workThread = new Thread(() => DoWork(userId, password));
+                    workThread.IsBackground = true;
                     workThread.Start();
                 };
             }
