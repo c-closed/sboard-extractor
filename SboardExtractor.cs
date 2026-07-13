@@ -170,6 +170,7 @@ namespace SboardExtractor
         private const string AppVersion = "1.4.7.5";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private static ManualResetEvent _extractPause = new ManualResetEvent(true);
+        private static volatile bool _cancelRequested;
         private const byte VK_UP = 0x26;
         private const byte VK_LEFT = 0x25;
         private const byte VK_RIGHT = 0x27;
@@ -402,15 +403,26 @@ namespace SboardExtractor
             Progress("총 " + items.Count + "건 처리 시작...");
             for (int idx = 0; idx < items.Count; idx++)
             {
+                _extractPause.WaitOne();
+                if (_cancelRequested)
+                {
+                    _cancelRequested = false;
+                    continue;
+                }
                 var item = items[idx];
                 string tag = string.Format("{0:D2}/{1:D2} ", idx + 1, items.Count);
-                _extractPause.WaitOne();
                 if (NativeMethods.IsIconic(sessionHwnd))
                 {
                     NativeMethods.ShowWindow(sessionHwnd, NativeMethods.SW_RESTORE);
                     Thread.Sleep(300);
                 }
                 DoSearch(sessionHwnd, item.DeptIndex, item.BizNum);
+                if (_cancelRequested)
+                {
+                    _cancelRequested = false;
+                    Progress(tag + "[" + item.BizNum + "] 추출 중지");
+                    continue;
+                }
                 Thread.Sleep(500);
                 Progress(tag + "[" + item.BizNum + "] 추출중...");
 
@@ -742,6 +754,7 @@ namespace SboardExtractor
             {
                 if (_extractPause.WaitOne(0))
                 {
+                    _cancelRequested = true;
                     _extractPause.Reset();
                     btnPause.Text = "다시시작";
                     AddLog("일시정지됨");
