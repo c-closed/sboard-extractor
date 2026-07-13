@@ -1,7 +1,7 @@
 [Setup]
 AppId={{B4F5C6D7-E8F9-4A3B-8C2D-1E5F6A7B8C9D}
 AppName=Sboard 추출기
-AppVersion=1.4.7.2
+AppVersion=1.4.7.3
 DefaultDirName={autopf}\Sboard 추출기
 DefaultGroupName=Sboard 추출기
 UninstallDisplayIcon={app}\Sboard 추출기.exe
@@ -136,6 +136,8 @@ begin
     UninstallKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + GetUninstallKeyName;
     RegWriteStringValue(HKLM64, UninstallKey, 'DisplayName', 'Sboard 추출기');
     RegWriteStringValue(HKLM32, UninstallKey, 'DisplayName', 'Sboard 추출기');
+    RegWriteStringValue(HKLM64, UninstallKey, 'DisplayVersion', '{#SetupSetting("AppVersion")}');
+    RegWriteStringValue(HKLM32, UninstallKey, 'DisplayVersion', '{#SetupSetting("AppVersion")}');
     if OriginalNewerVersion <> '' then
     begin
       RegWriteStringValue(HKLM64, UninstallKey, 'DisplayVersion', OriginalNewerVersion);

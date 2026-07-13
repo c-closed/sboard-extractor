@@ -12,9 +12,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <DefaultItemExcludes>$(DefaultItemExcludes);_i\**;bin\**;obj\**</DefaultItemExcludes>
-    <Version>1.4.7.2</Version>
-    <AssemblyVersion>1.4.7.2</AssemblyVersion>
-    <FileVersion>1.4.7.2</FileVersion>
+    <Version>1.4.7.3</Version>
+    <AssemblyVersion>1.4.7.3</AssemblyVersion>
+    <FileVersion>1.4.7.3</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

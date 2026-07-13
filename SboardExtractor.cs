@@ -14,8 +14,8 @@ using AutoUpdaterDotNET;
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.4.7.2")]
-[assembly: System.Reflection.AssemblyFileVersion("1.4.7.2")]
+[assembly: System.Reflection.AssemblyVersion("1.4.7.3")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.7.3")]
 
 namespace SboardExtractor
 {
@@ -167,7 +167,7 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.4.7.2";
+        private const string AppVersion = "1.4.7.3";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private static ManualResetEvent _extractPause = new ManualResetEvent(true);
         private const byte VK_UP = 0x26;
@@ -670,7 +670,7 @@ namespace SboardExtractor
             {
                 _desktopXlsx = desktopXlsx;
                 Text = "데이터 추출 진행";
-                Size = new Size(660, 462);
+                Size = new Size(660, 500);
                 FormBorderStyle = FormBorderStyle.FixedSingle;
                 ControlBox = false;
                 StartPosition = FormStartPosition.CenterScreen;
@@ -680,7 +680,7 @@ namespace SboardExtractor
                 lstLog = new ListBox
                 {
                     Location = new Point(12, 12),
-                    Size = new Size(624, 388),
+                    Size = new Size(624, 390),
                     Font = new Font("Consolas", 9),
                     HorizontalScrollbar = true,
                     SelectionMode = SelectionMode.None,
@@ -692,7 +692,7 @@ namespace SboardExtractor
                 btnPause = new Button
                 {
                     Text = "일시정지",
-                    Location = new Point(516, 416),
+                    Location = new Point(386, 418),
                     Size = new Size(120, 30),
                     FlatStyle = FlatStyle.Flat,
                     FlatAppearance = { BorderSize = 0 },
@@ -707,20 +707,23 @@ namespace SboardExtractor
 
                 btnClose = new Button
                 {
-                    Text = "종료 (Enter)",
-                    Location = new Point(516, 416),
+                    Text = "프로그램 종료",
+                    Location = new Point(516, 418),
                     Size = new Size(120, 30),
                     FlatStyle = FlatStyle.Flat,
                     FlatAppearance = { BorderSize = 0 },
-                    BackColor = Color.FromArgb(52, 120, 246),
+                    BackColor = Color.FromArgb(200, 70, 70),
                     ForeColor = Color.White,
                     Font = new Font("맑은 고딕", 9),
-                    Cursor = Cursors.Hand,
-                    Visible = false
+                    Cursor = Cursors.Hand
                 };
-                btnClose.Click += (s, e) => Close();
-                btnClose.MouseEnter += (s, e) => btnClose.BackColor = Color.FromArgb(42, 100, 220);
-                btnClose.MouseLeave += (s, e) => btnClose.BackColor = Color.FromArgb(52, 120, 246);
+                btnClose.Click += (s, e) =>
+                {
+                    try { KillSboard(); } catch { }
+                    Close();
+                };
+                btnClose.MouseEnter += (s, e) => btnClose.BackColor = Color.FromArgb(220, 50, 50);
+                btnClose.MouseLeave += (s, e) => btnClose.BackColor = Color.FromArgb(200, 70, 70);
 
                 Controls.Add(lstLog);
                 Controls.Add(btnPause);
@@ -770,7 +773,6 @@ namespace SboardExtractor
             {
                 if (InvokeRequired)
                 { try { Invoke((Action)Finish); } catch { } return; }
-                btnClose.Visible = true;
                 btnClose.Select();
             }
 
