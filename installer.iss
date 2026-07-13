@@ -13,6 +13,7 @@ SetupIconFile=icon.ico
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
+InfoBeforeFile=description.txt
 LanguageDetectionMethod=locale
 ShowLanguageDialog=no
 
