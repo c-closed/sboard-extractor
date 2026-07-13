@@ -167,7 +167,7 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.4.7.5";
+        private const string AppVersion = "1.4.7.6";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private static ManualResetEvent _extractPause = new ManualResetEvent(true);
         private static volatile bool _cancelRequested;
