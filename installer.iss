@@ -1,7 +1,6 @@
 [Setup]
 AppId={{B4F5C6D7-E8F9-4A3B-8C2D-1E5F6A7B8C9D}
 AppName=Sboard 추출기
-AppVerName=Sboard 추출기
 AppVersion=1.4.7.2
 DefaultDirName={autopf}\Sboard 추출기
 DefaultGroupName=Sboard 추출기
@@ -124,10 +123,15 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   UninstallKey: string;
 begin
-  if (CurStep = ssPostInstall) and (OriginalNewerVersion <> '') then
+  if CurStep = ssPostInstall then
   begin
     UninstallKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + GetUninstallKeyName;
-    RegWriteStringValue(HKLM64, UninstallKey, 'DisplayVersion', OriginalNewerVersion);
-    RegWriteStringValue(HKLM32, UninstallKey, 'DisplayVersion', OriginalNewerVersion);
+    RegWriteStringValue(HKLM64, UninstallKey, 'DisplayName', 'Sboard 추출기');
+    RegWriteStringValue(HKLM32, UninstallKey, 'DisplayName', 'Sboard 추출기');
+    if OriginalNewerVersion <> '' then
+    begin
+      RegWriteStringValue(HKLM64, UninstallKey, 'DisplayVersion', OriginalNewerVersion);
+      RegWriteStringValue(HKLM32, UninstallKey, 'DisplayVersion', OriginalNewerVersion);
+    end;
   end;
 end;
