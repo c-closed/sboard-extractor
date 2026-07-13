@@ -14,8 +14,8 @@ using AutoUpdaterDotNET;
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.4.7.1")]
-[assembly: System.Reflection.AssemblyFileVersion("1.4.7.1")]
+[assembly: System.Reflection.AssemblyVersion("1.4.7.2")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.7.2")]
 
 namespace SboardExtractor
 {
@@ -167,7 +167,7 @@ namespace SboardExtractor
         private static bool? _excelAvailable;
         private const string LoginWindowTitle = "Sboard";
         private const string SessionPrefix = "Sboard [";
-        private const string AppVersion = "1.4.7.1";
+        private const string AppVersion = "1.4.7.2";
         private const string UpdateXmlUrl = "https://extractor-api.sboard-auto-login.workers.dev/api/update.xml";
         private static ManualResetEvent _extractPause = new ManualResetEvent(true);
         private const byte VK_UP = 0x26;
@@ -670,7 +670,7 @@ namespace SboardExtractor
             {
                 _desktopXlsx = desktopXlsx;
                 Text = "데이터 추출 진행";
-                Size = new Size(660, 480);
+                Size = new Size(660, 462);
                 FormBorderStyle = FormBorderStyle.FixedSingle;
                 ControlBox = false;
                 StartPosition = FormStartPosition.CenterScreen;
@@ -692,7 +692,7 @@ namespace SboardExtractor
                 btnPause = new Button
                 {
                     Text = "일시정지",
-                    Location = new Point(528, 416),
+                    Location = new Point(516, 416),
                     Size = new Size(120, 30),
                     FlatStyle = FlatStyle.Flat,
                     FlatAppearance = { BorderSize = 0 },
@@ -708,7 +708,7 @@ namespace SboardExtractor
                 btnClose = new Button
                 {
                     Text = "종료 (Enter)",
-                    Location = new Point(528, 416),
+                    Location = new Point(516, 416),
                     Size = new Size(120, 30),
                     FlatStyle = FlatStyle.Flat,
                     FlatAppearance = { BorderSize = 0 },
