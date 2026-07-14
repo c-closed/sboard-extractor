@@ -27,8 +27,8 @@ Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
 WelcomeLabel2=Sboard 계약 데이터를 자동으로 추출합니다.%n%n계속하려면 [다음]을 클릭하십시오.
 
 [Tasks]
-Name: desktopicon; Description: "바탕화면에 바로가기 만들기"; GroupDescription: "바로가기 아이콘:"; Flags: checkedonce
-Name: startmenuicon; Description: "시작메뉴에 바로가기 만들기"; GroupDescription: "바로가기 아이콘:"; Flags: checkedonce
+Name: desktopicon; Description: "바탕화면에 바로가기 만들기"; GroupDescription: "바로가기 아이콘:"
+Name: startmenuicon; Description: "시작메뉴에 바로가기 만들기"; GroupDescription: "바로가기 아이콘:"
 
 [Files]
 Source: "publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -39,7 +39,7 @@ Name: "{autoprograms}\Sboard 추출기"; Filename: "{app}\Sboard 추출기.exe";
 Name: "{autoprograms}\Sboard 추출기 제거"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\Sboard 추출기.exe"; Description: "Sboard 추출기 실행"; Flags: nowait postinstall skipifsilent unchecked
+Filename: "{app}\Sboard 추출기.exe"; Description: "Sboard 추출기 실행"; Flags: nowait postinstall skipifsilent
 
 [Code]
 var
