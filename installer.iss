@@ -14,6 +14,7 @@ PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
 InfoBeforeFile=description.txt
+LicenseFile=LICENSE.txt
 LanguageDetectionMethod=locale
 ShowLanguageDialog=no
 
