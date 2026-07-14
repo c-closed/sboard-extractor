@@ -2,6 +2,10 @@
 AppId={{B4F5C6D7-E8F9-4A3B-8C2D-1E5F6A7B8C9D}
 AppName=Sboard 추출기
 AppVersion=1.4.7.7
+VersionInfoVersion=1.4.7.7
+VersionInfoCompany=류호준
+VersionInfoDescription=Sboard 추출기
+VersionInfoCopyright=Copyright (c) 2024 류호준
 DefaultDirName={autopf}\Sboard 추출기
 DefaultGroupName=Sboard 추출기
 UninstallDisplayIcon={app}\Sboard 추출기.exe
