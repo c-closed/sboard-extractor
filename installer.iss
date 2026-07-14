@@ -17,6 +17,8 @@ InfoBeforeFile=description.txt
 LicenseFile=LICENSE.txt
 LanguageDetectionMethod=locale
 ShowLanguageDialog=no
+WizardStyle=modern
+DisableWelcomePage=no
 
 [Languages]
 Name: "korean"; MessagesFile: "compiler:Languages\Korean.isl"
