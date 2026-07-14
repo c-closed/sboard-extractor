@@ -38,6 +38,9 @@ Name: "{autodesktop}\Sboard 추출기"; Filename: "{app}\Sboard 추출기.exe"; 
 Name: "{autoprograms}\Sboard 추출기"; Filename: "{app}\Sboard 추출기.exe"; Tasks: startmenuicon
 Name: "{autoprograms}\Sboard 추출기 제거"; Filename: "{uninstallexe}"
 
+[Run]
+Filename: "{app}\Sboard 추출기.exe"; Description: "Sboard 추출기 실행"; Flags: nowait postinstall skipifsilent unchecked
+
 [Code]
 var
   OriginalNewerVersion: string;
