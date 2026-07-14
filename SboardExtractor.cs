@@ -570,14 +570,6 @@ namespace SboardExtractor
                 string desktopXlsx = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                     "팀장회의 취합.xlsx");
-                while (!File.Exists(desktopXlsx))
-                {
-                    var result = MessageBox.Show(
-                        "바탕화면에 \"팀장회의 취합.xlsx\" 파일이 없습니다.\n\n"
-                        + "파일을 바탕화면으로 옮긴 후 확인을 눌러주세요.",
-                        "파일 없음", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
-                    if (result != DialogResult.OK) return;
-                }
                 btnLogin.Enabled = false;
                 btnLogin.Text = "접속중...";
                 var progress = new ProgressForm(txtId.Text, txtPw.Text, desktopXlsx);
