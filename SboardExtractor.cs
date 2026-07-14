@@ -600,11 +600,23 @@ namespace SboardExtractor
                 StartPosition = FormStartPosition.CenterScreen;
                 BackColor = Color.White;
                 SetIcon(this);
+                AllowDrop = true;
+                DragEnter += (s, e) =>
+                {
+                    if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                        e.Effect = DragDropEffects.Copy;
+                };
+                DragDrop += (s, e) =>
+                {
+                    string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    if (files != null && files.Length > 0 && files[0].EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+                        txtPath.Text = files[0];
+                };
 
                 var lbl = new Label
                 {
-                    Text = "추출할 파일을 선택하세요",
-                    Location = new Point(20, 20), Size = new Size(200, 22),
+                    Text = "추출할 파일을 선택하거나 끌어다 놓으세요",
+                    Location = new Point(20, 20), Size = new Size(300, 22),
                     Font = new Font("맑은 고딕", 9), ForeColor = Color.FromArgb(80, 80, 80)
                 };
 
@@ -614,14 +626,10 @@ namespace SboardExtractor
                     Font = new Font("맑은 고딕", 9), BorderStyle = BorderStyle.FixedSingle,
                     ReadOnly = true, BackColor = Color.FromArgb(245, 245, 245)
                 };
-                string defaultPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                    "팀장회의 취합.xlsx");
-                txtPath.Text = File.Exists(defaultPath) ? defaultPath : "";
 
                 btnBrowse = new Button
                 {
-                    Text = "찾아보기", Location = new Point(400, 48), Size = new Size(90, 28),
+                    Text = "불러오기", Location = new Point(400, 48), Size = new Size(90, 28),
                     FlatStyle = FlatStyle.Flat, FlatAppearance = { BorderSize = 0 },
                     BackColor = Color.FromArgb(100, 100, 100), ForeColor = Color.White,
                     Font = new Font("맑은 고딕", 9), Cursor = Cursors.Hand
@@ -655,8 +663,6 @@ namespace SboardExtractor
                     dlg.Title = "팀장회의 취합.xlsx 선택";
                     dlg.Filter = "Excel 파일 (*.xlsx)|*.xlsx";
                     dlg.CheckFileExists = true;
-                    if (!string.IsNullOrEmpty(txtPath.Text))
-                        dlg.InitialDirectory = Path.GetDirectoryName(txtPath.Text);
                     if (dlg.ShowDialog() == DialogResult.OK)
                         txtPath.Text = dlg.FileName;
                 }
