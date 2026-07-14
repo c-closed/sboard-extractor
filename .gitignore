@@ -1,6 +1,6 @@
 ﻿*.exe
 !Updater.exe
-!Sboard*_Setup.exe
+!sboard_extractor_setup.exe
 *.zip
 *.msi
 *.wixpdb
