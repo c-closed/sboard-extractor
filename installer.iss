@@ -100,10 +100,14 @@ begin
   else if Rev1 < Rev2 then Result := -1;
 end;
 
+function GetUninstallKey: string;
+begin
+  Result := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + GetUninstallKeyName;
+end;
+
 function InitializeSetup: Boolean;
 var
   InstalledVersion: string;
-  UninstallKey: string;
 begin
   Result := True;
   OriginalNewerVersion := '';
@@ -123,28 +127,18 @@ begin
     else
     begin
       OriginalNewerVersion := InstalledVersion;
-      UninstallKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + GetUninstallKeyName;
-      RegWriteStringValue(HKLM64, UninstallKey, 'DisplayVersion', '{#SetupSetting("AppVersion")}');
-      RegWriteStringValue(HKLM32, UninstallKey, 'DisplayVersion', '{#SetupSetting("AppVersion")}');
+      RegWriteStringValue(HKLM, GetUninstallKey, 'DisplayVersion', '{#SetupSetting("AppVersion")}');
     end;
   end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
-var
-  UninstallKey: string;
 begin
   if CurStep = ssPostInstall then
   begin
-    UninstallKey := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\' + GetUninstallKeyName;
-    RegWriteStringValue(HKLM64, UninstallKey, 'DisplayName', 'Sboard 추출기');
-    RegWriteStringValue(HKLM32, UninstallKey, 'DisplayName', 'Sboard 추출기');
-    RegWriteStringValue(HKLM64, UninstallKey, 'DisplayVersion', '{#SetupSetting("AppVersion")}');
-    RegWriteStringValue(HKLM32, UninstallKey, 'DisplayVersion', '{#SetupSetting("AppVersion")}');
+    RegWriteStringValue(HKLM, GetUninstallKey, 'DisplayName', 'Sboard 추출기');
+    RegWriteStringValue(HKLM, GetUninstallKey, 'DisplayVersion', '{#SetupSetting("AppVersion")}');
     if OriginalNewerVersion <> '' then
-    begin
-      RegWriteStringValue(HKLM64, UninstallKey, 'DisplayVersion', OriginalNewerVersion);
-      RegWriteStringValue(HKLM32, UninstallKey, 'DisplayVersion', OriginalNewerVersion);
-    end;
+      RegWriteStringValue(HKLM, GetUninstallKey, 'DisplayVersion', OriginalNewerVersion);
   end;
 end;
