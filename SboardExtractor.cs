@@ -567,20 +567,115 @@ namespace SboardExtractor
 
             void BtnLogin_Click(object sender, EventArgs e)
             {
-                string desktopXlsx = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                    "팀장회의 취합.xlsx");
                 btnLogin.Enabled = false;
                 btnLogin.Text = "접속중...";
-                var progress = new ProgressForm(txtId.Text, txtPw.Text, desktopXlsx);
-                progress.FormClosed += (s2, e2) => { Close(); };
-                progress.Show();
+                var fileSelect = new FileSelectForm(txtId.Text, txtPw.Text);
+                fileSelect.FormClosed += (s2, e2) => { Close(); };
+                fileSelect.Show();
                 Hide();
             }
 
             protected override void OnShown(EventArgs e)
             {
                 base.OnShown(e);
+            }
+        }
+
+        class FileSelectForm : Form
+        {
+            private TextBox txtPath;
+            private Button btnBrowse;
+            private Button btnExtract;
+            private string _userId;
+            private string _password;
+
+            public FileSelectForm(string userId, string password)
+            {
+                _userId = userId;
+                _password = password;
+                Text = "팀장회의 취합.xlsx 불러오기";
+                Size = new Size(520, 200);
+                FormBorderStyle = FormBorderStyle.FixedSingle;
+                MaximizeBox = false;
+                StartPosition = FormStartPosition.CenterScreen;
+                BackColor = Color.White;
+                SetIcon(this);
+
+                var lbl = new Label
+                {
+                    Text = "추출할 파일을 선택하세요",
+                    Location = new Point(20, 20), Size = new Size(200, 22),
+                    Font = new Font("맑은 고딕", 9), ForeColor = Color.FromArgb(80, 80, 80)
+                };
+
+                txtPath = new TextBox
+                {
+                    Location = new Point(20, 50), Size = new Size(370, 25),
+                    Font = new Font("맑은 고딕", 9), BorderStyle = BorderStyle.FixedSingle,
+                    ReadOnly = true, BackColor = Color.FromArgb(245, 245, 245)
+                };
+                string defaultPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                    "팀장회의 취합.xlsx");
+                txtPath.Text = File.Exists(defaultPath) ? defaultPath : "";
+
+                btnBrowse = new Button
+                {
+                    Text = "찾아보기", Location = new Point(400, 48), Size = new Size(90, 28),
+                    FlatStyle = FlatStyle.Flat, FlatAppearance = { BorderSize = 0 },
+                    BackColor = Color.FromArgb(100, 100, 100), ForeColor = Color.White,
+                    Font = new Font("맑은 고딕", 9), Cursor = Cursors.Hand
+                };
+                btnBrowse.Click += BtnBrowse_Click;
+                btnBrowse.MouseEnter += (s, e) => btnBrowse.BackColor = Color.FromArgb(80, 80, 80);
+                btnBrowse.MouseLeave += (s, e) => btnBrowse.BackColor = Color.FromArgb(100, 100, 100);
+
+                btnExtract = new Button
+                {
+                    Text = "추출하기", Location = new Point(20, 100), Size = new Size(470, 36),
+                    FlatStyle = FlatStyle.Flat, FlatAppearance = { BorderSize = 0 },
+                    BackColor = Color.FromArgb(52, 120, 246), ForeColor = Color.White,
+                    Font = new Font("맑은 고딕", 10, FontStyle.Bold), Cursor = Cursors.Hand
+                };
+                btnExtract.Click += BtnExtract_Click;
+                btnExtract.MouseEnter += (s, e) => btnExtract.BackColor = Color.FromArgb(42, 100, 220);
+                btnExtract.MouseLeave += (s, e) => btnExtract.BackColor = Color.FromArgb(52, 120, 246);
+                AcceptButton = btnExtract;
+
+                Controls.Add(lbl);
+                Controls.Add(txtPath);
+                Controls.Add(btnBrowse);
+                Controls.Add(btnExtract);
+            }
+
+            void BtnBrowse_Click(object sender, EventArgs e)
+            {
+                using (var dlg = new OpenFileDialog())
+                {
+                    dlg.Title = "팀장회의 취합.xlsx 선택";
+                    dlg.Filter = "Excel 파일 (*.xlsx)|*.xlsx";
+                    dlg.CheckFileExists = true;
+                    if (!string.IsNullOrEmpty(txtPath.Text))
+                        dlg.InitialDirectory = Path.GetDirectoryName(txtPath.Text);
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                        txtPath.Text = dlg.FileName;
+                }
+            }
+
+            void BtnExtract_Click(object sender, EventArgs e)
+            {
+                if (string.IsNullOrEmpty(txtPath.Text))
+                {
+                    MessageBox.Show("추출할 파일을 선택해주세요.", "파일 없음",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                btnExtract.Enabled = false;
+                btnExtract.Text = "추출중...";
+                var progress = new ProgressForm(_userId, _password, txtPath.Text);
+                progress.FormClosed += (s2, e2) => { Close(); };
+                progress.Show();
+                Hide();
             }
         }
 
