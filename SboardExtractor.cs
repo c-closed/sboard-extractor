@@ -14,8 +14,8 @@ using AutoUpdaterDotNET;
 [assembly: System.Reflection.AssemblyProduct("Sboard 추출기")]
 [assembly: System.Reflection.AssemblyCompany("")]
 [assembly: System.Reflection.AssemblyCopyright("")]
-[assembly: System.Reflection.AssemblyVersion("1.4.7.5")]
-[assembly: System.Reflection.AssemblyFileVersion("1.4.7.5")]
+[assembly: System.Reflection.AssemblyVersion("1.4.7.6")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.7.6")]
 
 namespace SboardExtractor
 {
