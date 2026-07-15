@@ -22,6 +22,7 @@ LicenseFile=LICENSE.txt
 LanguageDetectionMethod=locale
 ShowLanguageDialog=no
 WizardStyle=modern dynamic windows11
+WizardBackColor=white
 DisableWelcomePage=no
 
 [Languages]
