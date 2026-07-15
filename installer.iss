@@ -21,7 +21,7 @@ InfoBeforeFile=description.txt
 LicenseFile=LICENSE.txt
 LanguageDetectionMethod=locale
 ShowLanguageDialog=no
-WizardStyle=modern
+WizardStyle=modern windows11
 WizardResizable=yes
 DisableWelcomePage=no
 
