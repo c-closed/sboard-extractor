@@ -22,6 +22,7 @@ LicenseFile=LICENSE.txt
 LanguageDetectionMethod=locale
 ShowLanguageDialog=no
 WizardStyle=modern
+WizardResizable=yes
 DisableWelcomePage=no
 
 [Languages]
